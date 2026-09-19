@@ -4,7 +4,7 @@ import com.autka.BuildConfig
 import com.autka.data.remote.backend.BackendApi
 import com.autka.data.remote.rates.NbpApi
 import com.autka.data.remote.vin.VpicApi
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
