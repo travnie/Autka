@@ -131,7 +131,8 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-    implementation(libs.osmdroid.android)
+    implementation(libs.maplibre.android)
+    implementation(libs.maplibre.annotations)
 
     implementation(libs.androidx.datastore.preferences)
 
