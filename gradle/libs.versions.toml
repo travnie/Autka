@@ -15,7 +15,8 @@ okhttp = "5.5.0"
 kotlinxSerialization = "1.11.0"
 retrofitSerialization = "3.0.0"
 coil = "3.6.3"
-osmdroid = "6.1.20"
+maplibre = "13.6.1"
+maplibreAnnotations = "4.0.0"
 coroutines = "1.11.0"
 datastore = "1.2.1"
 junit = "4.13.2"
@@ -49,7 +50,8 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
-osmdroid-android = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+maplibre-android = { group = "org.maplibre.gl", name = "android-sdk", version.ref = "maplibre" }
+maplibre-annotations = { group = "org.maplibre.gl", name = "android-plugin-annotation", version.ref = "maplibreAnnotations" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
