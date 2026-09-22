@@ -33,12 +33,15 @@ jobs:
       matrix:
         include:
           - language: actions
+            bundle: actions
             build-mode: none
             runner: ubuntu-slim
           - language: javascript-typescript
+            bundle: javascript
             build-mode: none
             runner: ubuntu-slim
           - language: java-kotlin
+            bundle: java
             build-mode: manual
             runner: ubuntu-latest
 
@@ -53,6 +56,8 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          tools: >-
+            https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.27.1/codeql-bundle-${{ matrix.bundle }}-linux64.tar.zst
 
       # The java-kotlin database can only be built by actually compiling
       # app/, since CodeQL's autobuilder can't do this for an Android app
