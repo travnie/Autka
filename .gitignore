@@ -19,3 +19,21 @@ captures/
 Thumbs.db
 megalinter-reports/
 mega-linter.log
+
+# Node / Workers (any subdir)
+node_modules/
+.wrangler/
+worker-configuration.d.ts
+*.tsbuildinfo
+# Python helpers
+__pycache__/
+*.py[cod]
+.venv/
+# Local env / agent state
+.env
+.env.*
+!.env.example
+.dev.vars
+*.log
+.claude/
+CLAUDE.local.md
