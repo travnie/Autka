@@ -30,6 +30,9 @@
   "r2_buckets": [
     { "binding": "IMAGES", "bucket_name": "cargate-images" }
   ],
+  "triggers": {
+    "crons": []
+  },
   "vars": {
     "ENVIRONMENT": "production",
     "ENABLE_MOCK_SOURCE": "false"
