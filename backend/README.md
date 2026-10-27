@@ -117,8 +117,9 @@ fetches arbitrary URLs on demand.
 
 ## Operations
 
-- Production cron is currently disabled because no real ingestion source is enabled; re-enable
-  it when the first compliant source goes live.
+- Production cron is currently disabled because no real ingestion source is enabled;
+  `triggers.crons` is pinned to `[]` so every deploy clears a cron added outside the repo.
+  Re-enable it there when the first compliant source goes live.
 - `ingest_runs` retains the latest 500 diagnostic rows plus the latest completed row for
   every source, so source health does not disappear when another source is noisy.
 - `ingest_locks` prevents overlapping snapshots for one source and uses expiring leases so
