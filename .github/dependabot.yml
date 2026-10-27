@@ -3,6 +3,21 @@
 # Docs: https://docs.github.com/en/code-security/dependabot
 version: 2
 updates:
+  # --- GitHub Actions used in workflows ---
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "21:37"
+      timezone: "Europe/Warsaw"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns:
+          - "*"
   # --- Gradle / Kotlin dependencies (reads gradle/libs.versions.toml) ---
   - package-ecosystem: "gradle"
     directory: "/"
@@ -50,18 +65,3 @@ updates:
           - "minor"
           - "patch"
 
-  # --- GitHub Actions used in workflows ---
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "21:37"
-      timezone: "Europe/Warsaw"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "ci"
-    groups:
-      actions:
-        patterns:
-          - "*"
