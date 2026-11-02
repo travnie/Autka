@@ -37,3 +37,6 @@ __pycache__/
 *.log
 .claude/
 CLAUDE.local.md
+
+# Backend-specific build output
+/backend/**/dist/
