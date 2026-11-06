@@ -10,12 +10,12 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/travnie/Autka/actions/workflows/android-ci.yml"><img src="https://github.com/travnie/Autka/actions/workflows/android-ci.yml/badge.svg" alt="Android CI"></a>
-  <a href="https://github.com/travnie/Autka/actions/workflows/shared-ios-ci.yml"><img src="https://github.com/travnie/Autka/actions/workflows/shared-ios-ci.yml/badge.svg" alt="Shared iOS CI"></a>
-  <a href="https://github.com/travnie/Autka/actions/workflows/backend-ci.yml"><img src="https://github.com/travnie/Autka/actions/workflows/backend-ci.yml/badge.svg" alt="Backend CI"></a>
-  <img src="https://img.shields.io/badge/Android-minSdk%2026-3DDC84?logo=android&logoColor=white" alt="minSdk 26">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/travnie/Autka" alt="Apache-2.0"></a>
-  <a href="https://deepwiki.com/travnie/Autka"><img src="https://deepwiki.com/badge.svg" alt="DeepWiki"></a>
+  <a href="https://github.com/travnie/Autka/actions/workflows/android-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/travnie/Autka/android-ci.yml?branch=main&label=Android%20CI&logo=android&logoColor=white&style=flat-square" alt="Android CI"></a>
+  <a href="https://github.com/travnie/Autka/actions/workflows/shared-ios-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/travnie/Autka/shared-ios-ci.yml?branch=main&label=shared%20iOS%20CI&logo=apple&logoColor=white&style=flat-square" alt="Shared iOS CI"></a>
+  <a href="https://github.com/travnie/Autka/actions/workflows/backend-ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/travnie/Autka/backend-ci.yml?branch=main&label=backend%20CI&logo=githubactions&logoColor=white&style=flat-square" alt="Backend CI"></a>
+  <a href="https://developer.android.com/guide/topics/manifest/uses-sdk-element"><img src="https://img.shields.io/badge/Android-minSdk%2026-3DDC84?logo=android&logoColor=white&style=flat-square" alt="minSdk 26"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/travnie/Autka?logo=opensourceinitiative&logoColor=white&style=flat-square" alt="Apache-2.0"></a>
+  <a href="https://deepwiki.com/travnie/Autka"><img src="https://img.shields.io/badge/DeepWiki-docs-1F6FEB?logo=readthedocs&logoColor=white&style=flat-square" alt="DeepWiki"></a>
 </p>
 
 <p align="center">
