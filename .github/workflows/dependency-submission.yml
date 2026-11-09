@@ -14,6 +14,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: dependency-submission-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # On push to main: resolve the full Gradle dependency graph (including transitive
   # deps) and submit it to GitHub. This is what lets Dependabot security alerts work
