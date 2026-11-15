@@ -22,8 +22,5 @@
   },
   "dependencies": {
     "hono": "^4.13.16"
-  },
-  "overrides": {
-    "undici": "7.29.0"
   }
 }
