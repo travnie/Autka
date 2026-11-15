@@ -26,10 +26,9 @@ boundary, partner paths and source acceptance checklist.
 
 ## Useful without a live provider
 
-- **Indexed listing previews.** Build on the browser-only web fallback with optional
-  lightweight results from a licensed search API behind the backend: title, source, URL and
-  snippet only. Keep them separate from `CarOffer`, never crawl listing pages, and treat the
-  original marketplace as authoritative.
+- **Indexed listing previews (next).** Follow the phased rollout in
+  [DATA_SOURCES.md](DATA_SOURCES.md#indexed-search-rollout): backend contract and quota
+  guards, Brave/Tavily, client UI, then licensed structured inventory.
 - **Saved-search alerts.** Once a live catalogue provides meaningful changes to watch, add
   opt-in price-drop and new-listing alerts on top of the local saved searches.
 

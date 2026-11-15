@@ -9,7 +9,7 @@ part of the catalogue.
 
 Autka does **not** scrape marketplaces or reverse-engineer private endpoints.
 
-There are two deliberately separate paths:
+There are three deliberately separate paths:
 
 1. **Catalogue data** comes from licensed, partner-provided, seller-authorised or
    otherwise permitted feeds. It is normalized by the Cloudflare backend and served to
@@ -17,9 +17,11 @@ There are two deliberately separate paths:
 2. **Marketplace deep-links** stay on the client. The shared builder translates the active
    `SearchFilter` into the original marketplace's search URL, and the platform UI opens
    that site. No listing data is ingested by Autka.
+3. **Indexed search previews** come from permitted search APIs on demand. Separate
+   backend search route and client model; never ingest into `CarOffer` or D1/R2.
 
-The implementation boundary is simple: anything that produces a `CarOffer` belongs in
-backend ingestion. Anything that only produces a URL belongs in `feature/external`.
+`CarOffer` belongs in backend ingestion; marketplace hand-offs and indexed preview UI
+belong in `feature/external`.
 
 ## Current state
 
@@ -103,6 +105,65 @@ against a real marketplace URL before being relied on.
 
 Deep-links are a convenience, not an ingestion source. A marketplace may remain available
 as a deep-link even after a licensed feed is added.
+
+## Indexed search rollout
+
+Goal: metasearch with original listing links, not another marketplace. No crawling,
+scheduled searches, fake offers or price extraction from snippets.
+
+Provider shortlist (pricing checked 2026-11-15; recheck terms before activation):
+
+| Provider | Role | Published entry allowance |
+| --- | --- | --- |
+| [Brave Search](https://brave.com/search/api/) | PL/EU/US primary web search | $5 monthly credits at $5/1,000 requests; $0 prepay, card required |
+| [Tavily](https://www.tavily.com/pricing) | Web fallback | 1,000 monthly credits, no card; basic search only |
+| [Auto.dev](https://www.auto.dev/listings) | US structured inventory candidate | 1,000 included API calls/month; verify per-call fees and display rights |
+| [MarketCheck](https://developers.marketcheck.com/) | US alternative | Verify current plan, coverage and redistribution rights |
+
+OTOMOTO's ChatGPT integration returns structured offers but is not a Worker credential
+or permission to reuse its data. Pursue partner access separately. AutoUncle B2B and
+direct dealer/importer feeds remain parallel opportunities.
+
+### Phase 1: backend contract and search
+
+- Separate `GET /search/previews` endpoint: region, bounded make/model/query, optional
+  pagination later. Fixed provider host and marketplace allowlists; no arbitrary URLs.
+- Preview fields: title, original HTTPS URL, marketplace, provider, plain-text snippet.
+  Missing structured facts stay missing; label results indexed, not verified live.
+- Reuse existing browser search scope (PL/EU/US); centralize marketplace metadata
+  rather than multiplying host lists. Accept individual listing URLs, not category pages.
+- Brave adapter first; Tavily basic search fallback on unavailable/quota/transient errors.
+  One provider per attempt; no automatic fan-out. Empty results are not errors.
+- Worker secrets only. Provider adapters and route disabled by default until licensed
+  display/attribution and quota controls verified. Keep original browser deep-links.
+- Enforce global monthly budget per provider (atomic reservation before outbound call),
+  bounded per-client rate limits, timeouts, concurrency and query/result limits.
+  No paid overage, no background retries. Never log raw queries, credentials or snippets.
+- Deduplicate canonical listing URL, retain functional URL parameters. Treat snippets
+  as untrusted plain text; no HTML rendering. No provider-result persistence or image
+  proxy/cache without explicit rights; default responses `Cache-Control: no-store`.
+- Tests: host/path allowlists, operator injection, malformed payloads, duplicates,
+  missing secrets, fallback, quota exhaustion and no upstream network in CI.
+
+### Phase 2: client UI
+
+- Shared preview model and provider-neutral endpoint client; Android then iOS.
+- Explicit search action, no request per keystroke. Separate indexed-results section;
+  show title, source, snippet, link and required provider attribution.
+- Open original listing directly. Label freshness limitations and incomplete filter
+  coverage. Keep deep-links accessible on empty, offline and quota-exhausted states.
+- No inclusion in catalogue counts, map, numeric price sorting, saved-offer storage
+  or alerts unless underlying data contract supports it.
+
+### Phase 3: structured inventory
+
+- Evaluate Auto.dev first for US dealer inventory; confirm fees, allowed fields, caching,
+  attribution, freshness, pagination and link-back conditions.
+- Add authorized structured search adapter only after acceptance checklist. Use
+  query-time results or explicit snapshot/delta feeds as the contract requires.
+- Evaluate MarketCheck and EU/PL partner feeds after initial coverage/quality measurements.
+- Measure useful individual listing hits, stale links, latency, quota usage and fallback
+  rate before expanding scope. No paid plan without explicit approval.
 
 ## Source research shortlist
 
