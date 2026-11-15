@@ -1,6 +1,6 @@
 -- Canonical operator-set caps. Missing/zero = disabled; no per-deployment cap.
 CREATE TABLE IF NOT EXISTS search_provider_limits (
-  provider TEXT PRIMARY KEY CHECK (provider IN ('brave', 'tavily')),
+  provider TEXT NOT NULL PRIMARY KEY CHECK (provider IN ('brave', 'tavily')),
   monthly_limit INTEGER NOT NULL CHECK (
     typeof(monthly_limit) = 'integer' AND monthly_limit BETWEEN 0 AND 1000
   )
