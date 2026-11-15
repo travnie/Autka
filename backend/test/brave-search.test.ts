@@ -61,6 +61,15 @@ describe("Brave PL search previews", () => {
     expect(Array.from(result.snippet)).toHaveLength(500);
   });
 
+  it("collapses padded text before limiting the display length", () => {
+    const result = decodeBravePlResults(payload({
+      url: offer, title: "Lexus" + " ".repeat(3000) + "ES",
+      description: "\n".repeat(3000) + "Sedan",
+    }))[0];
+    expect(result.title).toBe("Lexus ES");
+    expect(result.snippet).toBe("Sedan");
+  });
+
   it("distinguishes empty results from malformed responses", () => {
     expect(decodeBravePlResults({ type: "search" })).toEqual([]);
     expect(decodeBravePlResults(payload())).toEqual([]);

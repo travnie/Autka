@@ -53,8 +53,21 @@ function record(value: unknown): Record<string, unknown> | null {
 
 function text(value: unknown, max: number): string {
   if (typeof value !== "string") return "";
-  const bounded = value.slice(0, max * 4).replace(/\s+/g, " ").trim();
-  return Array.from(bounded).slice(0, max).join("").replace(/[\uD800-\uDFFF]/gu, "\uFFFD");
+  // Collapse whitespace without allocating a copy of the entire input.
+  const output: string[] = [];
+  let space = false;
+  for (const char of value) {
+    if (/\s/u.test(char)) {
+      space = output.length > 0;
+      continue;
+    }
+    if (space && output.length + 1 >= max) break;
+    if (space) output.push(" ");
+    output.push(/[\uD800-\uDFFF]/u.test(char) ? "\uFFFD" : char);
+    space = false;
+    if (output.length >= max) break;
+  }
+  return output.join("");
 }
 
 function listing(raw: unknown) {
