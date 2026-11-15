@@ -35,7 +35,7 @@ async function readJson(response: Response): Promise<unknown> {
   }
   const body = await readBodyUpTo(response.body, MAX_BODY_BYTES);
   if (!body) throw new Error("provider_body_too_large");
-  return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(body)) as unknown;
+  return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body)) as unknown;
 }
 
 /** Sequential fallback; a successful empty set is authoritative for that attempt. */
