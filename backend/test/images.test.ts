@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readBodyUpTo } from "../src/ingest/images";
+import { readBodyUpTo } from "../src/lib/body";
 
 function stream(...chunks: number[][]): ReadableStream<Uint8Array> {
   return new ReadableStream({
