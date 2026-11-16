@@ -21,6 +21,20 @@ describe("readBodyUpTo", () => {
     expect(await readBodyUpTo(body, 5)).toBeNull();
     expect(body.locked).toBe(false);
   });
+  it("releases the reader without waiting for a stalled underlying cancel", async () => {
+    let cancelCalled = false;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) { controller.enqueue(new Uint8Array(6)); },
+      cancel() {
+        cancelCalled = true;
+        return new Promise<void>(() => {});
+      },
+    });
+    expect(await readBodyUpTo(body, 5)).toBeNull();
+    expect(cancelCalled).toBe(true);
+    expect(body.locked).toBe(false);
+  });
+
   it("releases the reader after an already-aborted read", async () => {
     const body = stream([1]);
     const controller = new AbortController();

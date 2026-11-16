@@ -132,6 +132,7 @@ describe("provider fallback transport", () => {
       new Response("x".repeat(300000), { headers: { "Content-Type": "application/json" } }),
       new Response("{", { headers: { "Content-Type": "application/json" } }),
       new Response("{}", { headers: { "Content-Type": "text/html" } }),
+      new Response(new Uint8Array([123, 125])),
     ]) {
       const dispatch: PreviewDispatch = async provider =>
         provider === "brave" ? response : json({ results: [listing] });
