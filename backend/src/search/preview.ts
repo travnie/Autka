@@ -76,7 +76,6 @@ function listing(raw: unknown) {
 export function decodePlRows(
   rows: unknown[],
   provider: IndexedPreview["provider"],
-  snippetField: "description" | "content",
 ): IndexedPreview[] {
   const seen = new Set<string>();
   const previews: IndexedPreview[] = [];
@@ -91,7 +90,7 @@ export function decodePlRows(
       url: match.url,
       marketplace: match.marketplace,
       provider,
-      snippet: text(row?.[snippetField], 500),
+      snippet: text(provider === "brave" ? row?.description : row?.content, 500),
     });
   }
   return previews;

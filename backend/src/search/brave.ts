@@ -23,5 +23,5 @@ export function decodeBravePlResults(payload: unknown): IndexedPreview[] {
   const web = record(root.web);
   if (!Array.isArray(web?.results)) throw new Error("invalid_brave_response");
 
-  return decodePlRows(web.results, "brave", "description");
+  return decodePlRows(web.results, "brave");
 }

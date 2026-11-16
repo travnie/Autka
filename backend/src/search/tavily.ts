@@ -31,5 +31,5 @@ export function buildTavilyPlRequest(input: string, apiKey: string): Request | n
 export function decodeTavilyPlResults(payload: unknown): IndexedPreview[] {
   const root = record(payload);
   if (!Array.isArray(root?.results)) throw new Error("invalid_tavily_response");
-  return decodePlRows(root.results, "tavily", "content");
+  return decodePlRows(root.results, "tavily");
 }
