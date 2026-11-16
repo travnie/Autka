@@ -17,7 +17,15 @@ describe("readBodyUpTo", () => {
   });
 
   it("rejects a chunked body once it crosses the limit", async () => {
-    const body = await readBodyUpTo(stream([1, 2, 3], [4, 5, 6]), 5);
-    expect(body).toBeNull();
+    const body = stream([1, 2, 3], [4, 5, 6]);
+    expect(await readBodyUpTo(body, 5)).toBeNull();
+    expect(body.locked).toBe(false);
+  });
+  it("releases the reader after an already-aborted read", async () => {
+    const body = stream([1]);
+    const controller = new AbortController();
+    controller.abort();
+    await expect(readBodyUpTo(body, 5, controller.signal)).rejects.toThrow("body_read_aborted");
+    expect(body.locked).toBe(false);
   });
 });

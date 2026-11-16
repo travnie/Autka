@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { buildTavilyPlRequest, decodeTavilyPlResults } from "../src/search/tavily";
 import { searchPlPreviews, type PreviewDispatch } from "../src/search/transport";
 
@@ -84,6 +84,23 @@ describe("provider fallback transport", () => {
       status: "ok", provider: "tavily",
     });
     expect(aborted).toBe(true);
+  }, 10000);
+
+  it("disposes a response that arrives after the attempt deadline", async () => {
+    let cancelled = false;
+    let complete: ((response: Response) => void) | undefined;
+    const dispatch: PreviewDispatch = async provider => {
+      if (provider === "tavily") return json({ results: [listing] });
+      return new Promise<Response>(resolve => { complete = resolve; });
+    };
+    expect(await searchPlPreviews("Lexus", keys, dispatch)).toMatchObject({
+      status: "ok", provider: "tavily",
+    });
+    const body = new ReadableStream<Uint8Array>({
+      cancel() { cancelled = true; },
+    });
+    complete?.(new Response(body));
+    await vi.waitFor(() => expect(cancelled).toBe(true));
   }, 10000);
 
   it("times out a stalled response body and cancels the reader", async () => {
