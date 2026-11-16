@@ -21,7 +21,10 @@ describe("Auto.dev internal evaluation", () => {
     expect(url.searchParams.get("retailListing.used")).toBe("true");
     expect(url.searchParams.get("limit")).toBe("20");
     expect(url.searchParams.get("page")).toBe("1");
-    expect(url.searchParams.get("select")).toContain("retailListing.vdp");
+    expect(url.searchParams.get("select")?.split(",")).toEqual([
+      "vehicle.vin", "vehicle.make", "vehicle.model", "vehicle.year",
+      "retailListing.price", "retailListing.vdp",
+    ]);
     expect(request.headers.get("Authorization")).toBe("Bearer fixture-token");
     expect(request.url).not.toContain("fixture-token");
     expect(request.redirect).toBe("manual");
@@ -36,7 +39,7 @@ describe("Auto.dev internal evaluation", () => {
 
   it("decodes selected fields and drops duplicate or invalid listing rows", () => {
     expect(decodeAutoDevEvaluation({ data: [
-      fixture, fixture,
+      { ...fixture, "vehicle.make": " Lexus ", "vehicle.model": " ES 300h " }, fixture,
       { ...fixture, "vehicle.vin": "1ABCDEF2345678902", "retailListing.price": 0 },
       { ...fixture, "vehicle.vin": "1ABCDEF2345678903", "retailListing.vdp": "http://dealer.example/vehicle/3" },
       { ...fixture, "vehicle.vin": "1ABCDEF2345678904", "retailListing.vdp": "https://user@dealer.example/vehicle/4" },

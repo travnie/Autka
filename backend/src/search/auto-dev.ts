@@ -87,7 +87,7 @@ export function decodeAutoDevEvaluation(payload: unknown): AutoDevEvaluationList
       typeof price !== "number" || !Number.isFinite(price) || price <= 0 || !listingUrl
     ) continue;
     seen.add(vin);
-    listings.push({ vin, make, model, year, priceUsd: price, listingUrl });
+    listings.push({ vin, make: make.trim(), model: model.trim(), year, priceUsd: price, listingUrl });
   }
   return listings;
 }
