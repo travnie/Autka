@@ -100,4 +100,9 @@
     <string name="import_open_site">Open site</string>
     <string name="import_open_calculator">Cost calculator</string>
     <string name="import_services_disclaimer">Independent companies, not affiliated with Autka. Verify terms and costs directly.</string>
+    <string name="indexed_search_title">Indexed search (Poland)</string>
+    <string name="indexed_search_notice">Search previews from web indexes. Listing availability and filters are not verified. Open the original listing.</string>
+    <string name="indexed_search_unavailable">Search unavailable. Use marketplace links instead.</string>
+    <string name="indexed_search_empty">No indexed listings found. Try marketplace links.</string>
+    <string name="indexed_search_action">Search</string>
 </resources>

@@ -1,6 +1,10 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Indexed search (Poland)" : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wyszukiwanie indeksowane (Polska)" } } } },
+    "Search previews from web indexes. Listing availability and filters are not verified. Open the original listing." : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "Podgląd wyników z indeksów internetowych. Dostępność i filtry nie są weryfikowane. Otwórz oryginalne ogłoszenie." } } } },
+    "Search unavailable. Use marketplace links instead." : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wyszukiwanie niedostępne. Skorzystaj z odnośników do serwisów." } } } },
+    "No indexed listings found. Try marketplace links." : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "Brak wyników w indeksie. Skorzystaj z odnośników do serwisów." } } } },
     "17 characters. Letters I, O and Q are not valid VIN characters." : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "17 znaków. Litery I, O i Q nie występują w numerach VIN." } } } },
     "Adjust shipping" : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zmień koszt transportu" } } } },
     "Adjust vehicle price" : { "localizations" : { "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zmień cenę pojazdu" } } } },

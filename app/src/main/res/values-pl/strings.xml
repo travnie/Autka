@@ -104,4 +104,9 @@
     <string name="import_open_site">Otwórz stronę</string>
     <string name="import_open_calculator">Kalkulator kosztów</string>
     <string name="import_services_disclaimer">Niezależne firmy, niepowiązane z Autka. Zweryfikuj warunki i koszty bezpośrednio.</string>
+    <string name="indexed_search_title">Wyszukiwanie indeksowane (Polska)</string>
+    <string name="indexed_search_notice">Podgląd wyników z indeksów internetowych. Dostępność i filtry nie są weryfikowane. Otwórz oryginalne ogłoszenie.</string>
+    <string name="indexed_search_unavailable">Wyszukiwanie niedostępne. Skorzystaj z odnośników do serwisów.</string>
+    <string name="indexed_search_empty">Brak wyników w indeksie. Skorzystaj z odnośników do serwisów.</string>
+    <string name="indexed_search_action">Szukaj</string>
 </resources>

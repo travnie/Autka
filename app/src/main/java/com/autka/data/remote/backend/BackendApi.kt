@@ -3,11 +3,16 @@ package com.autka.data.remote.backend
 import com.autka.core.model.ImportService
 import com.autka.core.model.Region
 import kotlinx.serialization.Serializable
+import retrofit2.http.Body
+import retrofit2.http.POST
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 /** Client for the Autka aggregation backend. */
 interface BackendApi {
+    @POST("search/previews")
+    suspend fun indexedPreviews(@Body request: IndexedPreviewRequest): IndexedPreviewResponse
+
     @GET("offers")
     suspend fun offers(
         @Query("query") query: String? = null,

@@ -74,6 +74,9 @@ class BackendCarOfferSourceTest {
             )
         }
 
+        override suspend fun indexedPreviews(request: IndexedPreviewRequest): IndexedPreviewResponse =
+            IndexedPreviewResponse("unavailable")
+
         override suspend fun sources(): SourcesResponse = SourcesResponse()
 
         override suspend fun importServices(region: String?): ImportServicesResponse =
