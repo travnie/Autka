@@ -117,7 +117,7 @@ Provider shortlist (pricing checked 2026-11-15; recheck terms before activation)
 | --- | --- | --- |
 | [Brave Search](https://brave.com/search/api/) | PL/EU/US primary web search | $5 monthly credits at $5/1,000 requests; $0 prepay, card required |
 | [Tavily](https://www.tavily.com/pricing) | Web fallback | 1,000 monthly credits, no card; basic search only |
-| [Auto.dev](https://www.auto.dev/listings) | US structured inventory candidate | 1,000 included API calls/month; verify per-call fees and display rights |
+| [Auto.dev](https://www.auto.dev/listings) | US structured inventory evaluation only | Free: 1,000 calls/month, capped, 5 requests/sec; no production end-user use |
 | [MarketCheck](https://developers.marketcheck.com/) | US alternative | Verify current plan, coverage and redistribution rights |
 
 OTOMOTO's ChatGPT integration returns structured offers but is not a Worker credential
@@ -157,8 +157,14 @@ direct dealer/importer feeds remain parallel opportunities.
 
 ### Phase 3: structured inventory
 
-- Evaluate Auto.dev first for US dealer inventory; confirm fees, allowed fields, caching,
-  attribution, freshness, pagination and link-back conditions.
+- Auto.dev: internal evaluation only. [Terms](https://www.auto.dev/terms) §§4.2–4.4
+  restrict redistribution and derivative databases; Free allowance excludes production
+  systems serving end users. Do not activate public search or ingest/cache listings.
+  Confirm written display/redistribution rights and billing before production use.
+- Evaluation contract: [v2 listings](https://docs.auto.dev/v2/reference/searchVehicleListings),
+  server-only `AD_API_KEY`, bearer auth, one bounded page (20 maximum), used US retail
+  listings, projected fields. No automatic calls, pagination, photos or persistence.
+  Request/decoder fixtures only until private testing is explicitly wired.
 - Add authorized structured search adapter only after acceptance checklist. Use
   query-time results or explicit snapshot/delta feeds as the contract requires.
 - Evaluate MarketCheck and EU/PL partner feeds after initial coverage/quality measurements.
