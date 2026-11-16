@@ -3,4 +3,7 @@
 interface Env {
   /** Bearer token guarding POST /admin/ingest. Set via: wrangler secret put ADMIN_TOKEN */
   ADMIN_TOKEN?: string;
+  BSAS_API_KEY?: string;
+  TAVILY_API_KEY?: string;
+  AD_API_KEY?: string;
 }

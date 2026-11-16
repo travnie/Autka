@@ -126,16 +126,19 @@ direct dealer/importer feeds remain parallel opportunities.
 
 ### Phase 1: backend contract and search
 
-- Separate `GET /search/previews` endpoint: region, bounded make/model/query, optional
-  pagination later. Fixed provider host and marketplace allowlists; no arbitrary URLs.
+- `POST /search/previews`: JSON `{region: "PL", query: "make model"}`. Query bounded to
+  256 characters; body <= 1 KiB. Other regions/pagination later. POST keeps terms out of URLs.
+  Fixed provider host and marketplace allowlists; no arbitrary URLs.
 - Preview fields: title, original HTTPS URL, marketplace, provider, plain-text snippet.
   Missing structured facts stay missing; label results indexed, not verified live.
 - Reuse existing browser search scope (PL/EU/US); centralize marketplace metadata
   rather than multiplying host lists. Accept individual listing URLs, not category pages.
 - Brave adapter first; Tavily basic search fallback on unavailable/quota/transient errors.
   One provider per attempt; no automatic fan-out. Empty results are not errors.
-- Worker secrets only. Provider adapters and route disabled by default until licensed
-  display/attribution and quota controls verified. Keep original browser deep-links.
+- Server secrets: `BSAS_API_KEY` (Brave), `TAVILY_API_KEY`. `ENABLE_INDEXED_SEARCH=false`
+  by default. Enable only after display rights, provider account caps and D1 limits verified.
+  Per-IP Cloudflare rate limiter: 3 requests/minute/location (approximate); global D1 cap
+  remains authoritative. No persisted IP addresses. Keep original browser deep-links.
 - Enforce global monthly budget per provider (atomic reservation before outbound call),
   bounded per-client rate limits, timeouts, concurrency and query/result limits.
   No paid overage, no background retries. Never log raw queries, credentials or snippets.
