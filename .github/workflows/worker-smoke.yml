@@ -1,0 +1,33 @@
+name: Worker smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/legacy/**"
+      - ".github/workflows/worker-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Both Worker hostnames
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Verify public read-only routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for worker in cargate cargate-backend; do
+            base="https://$worker.travny.workers.dev"
+            echo "Checking $worker"
+            curl --fail --silent --show-error --retry 3 --retry-all-errors --max-time 15 "$base/health" |
+              jq -e '.status == "ok"' >/dev/null
+            curl --fail --silent --show-error --retry 3 --retry-all-errors --max-time 15 "$base/offers?limit=1" |
+              jq -e '(.offers | type == "array") and (.count | type == "number")' >/dev/null
+            status=$(curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' "$base/images/smoke-missing-object")
+            test "$status" = 404
+          done
