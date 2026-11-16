@@ -48,6 +48,7 @@ function dispatchUntilAbort(
     }).then(response => {
       if (signal.aborted) {
         if (response) discardBody(response);
+        abort();
       } else {
         resolve(response);
       }
