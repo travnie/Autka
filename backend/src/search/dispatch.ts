@@ -17,7 +17,7 @@ function isProviderRequest(provider: SearchProvider, request: Request): boolean 
 /**
  * Reserve one unit before sending a fixed provider request.
  * No retries or refunds. Abort, quota denial and month rollover fail closed.
- * Caller must supply a deadline signal (searchPlPreviews owns the timeout).
+ * Caller must supply a deadline signal covering reservation, fetch and body read.
  * D1 failures propagate; the transport handles fallback.
  */
 export function createBudgetedDispatch(db: D1Database, send: Send = fetch, now = () => new Date()) {
@@ -29,7 +29,7 @@ export function createBudgetedDispatch(db: D1Database, send: Send = fetch, now =
     if (signal.aborted || !isProviderRequest(provider, request)) return null;
     const reservation = await reserveSearchBudget(db, provider, 1, now());
     if (!reservation) {
-      console.warn(JSON.stringify({ msg: "search_dispatch_denied", provider, reason: "budget" }));
+      console.warn(JSON.stringify({ msg: "search_dispatch_denied", provider, reason: "reservation_denied" }));
       return null;
     }
     if (signal.aborted || !isCurrentReservation(reservation, now())) return null;
