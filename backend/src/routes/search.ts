@@ -17,7 +17,7 @@ const MAX_REQUEST_BYTES = 1024;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 type Send = (request: Request, init: RequestInit) => Promise<Response>;
 
-export function createSearchRouter(send?: Send) {
+export function createSearchRouter(send?: Send, now?: () => Date) {
   const router = new Hono<{ Bindings: SearchEnv }>();
 
   router.post("/search/previews", async (c) => {
@@ -74,7 +74,7 @@ export function createSearchRouter(send?: Send) {
       }
 
       stage = "search";
-      const result = await searchPlPreviews(payload.query, keys, createBudgetedDispatch(env.DB, send));
+      const result = await searchPlPreviews(payload.query, keys, createBudgetedDispatch(env.DB, send, now));
       if (result.status === "ok") return c.json(result);
       if (result.status === "invalid_query") return c.json(result, 400);
       return c.json(result, 503);

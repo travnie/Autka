@@ -15,7 +15,7 @@ const bindings = () => ({
   TAVILY_API_KEY: "fixture-tavily-key",
   SEARCH_RATE_LIMITER: { limit: rate },
 });
-const router = createSearchRouter(send);
+const router = createSearchRouter(send, () => new Date("2041-01-15T12:00:00Z"));
 function call(body: unknown = input, overrides: Partial<ReturnType<typeof bindings>> = {}, ip = "192.0.2.1") {
   return router.request("/search/previews", {
     method: "POST",
