@@ -45,7 +45,8 @@ function text(value: unknown, max: number): string {
   const output: string[] = [];
   let space = false;
   for (const char of value) {
-    if (/\s/u.test(char)) {
+    const point = char.codePointAt(0) ?? 0;
+    if (/\s/u.test(char) || point < 32 || point === 127) {
       space = output.length > 0;
       continue;
     }
