@@ -54,6 +54,9 @@ The `CarOffer` shape in `src/lib/types.ts` mirrors Android
 
 ## Provisioned resources
 
+- **Worker**: `cargate` (`https://cargate.travny.workers.dev/`)
+- **Legacy URL**: `cargate-backend.travny.workers.dev` via the service-binding adapter in `legacy/`.
+
 - **D1**: `cargate-offers`
 - **R2**: `cargate-images`
 
@@ -77,6 +80,22 @@ Mock ingestion is opt-in. Set `ENABLE_MOCK_SOURCE=true` for a local/demo Worker.
 production configuration keeps it false.
 
 ## Deploy
+
+Cutover prerequisite: rename the existing Worker in place; verify its ID and secret
+names are unchanged. Deploy the secret-free legacy adapter with
+`npx wrangler deploy --config legacy/wrangler.jsonc`. Keep client URLs on the
+legacy hostname until both endpoints pass smoke checks. The separate
+`trvny/trvny/mcp/status-mcp/wrangler.jsonc` must reference `cargate` via `AUTKA`.
+Preserve the existing Cloudflare Access application and policy for both hostnames.
+
+After deployment, smoke-check both hostnames with authorized Access credentials:
+`GET /health`, `GET /offers`, `GET /images/missing` (expected 404).
+The manual Worker smoke workflow requires `CF_ACCESS_CLIENT_ID` and
+`CF_ACCESS_CLIENT_SECRET` repository secrets. It tests live deployments, not PR code.
+Verify before shipping client URL changes.
+Compatibility date 2026-11-11: newest supported by the locked CI runtime;
+retest before raising. Run `npm run test` and `npx wrangler deploy --dry-run`.
+Only deploy the main config after completing the cutover.
 
 ```bash
 npx wrangler login
@@ -124,4 +143,5 @@ fetches arbitrary URLs on demand.
   every source, so source health does not disappear when another source is noisy.
 - `ingest_locks` prevents overlapping snapshots for one source and uses expiring leases so
   a crashed Worker cannot block ingestion forever.
-- `ADMIN_TOKEN` is a Worker secret and is never committed.
+- `ADMIN_TOKEN`, `AD_API_KEY`, `TAVILY_API_KEY`, `BSAS_API_KEY` and future provider keys are Worker secrets; never commit values.
+- Smart Placement enabled. Issues enabled; request URL query strings redacted. Keep logs sampled at 1%; invocation logs off.

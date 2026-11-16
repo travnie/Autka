@@ -1,0 +1,34 @@
+name: Worker smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Both deployed Worker hostnames
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    steps:
+      - name: Verify authenticated read-only routes
+        shell: bash
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          : "${CF_ACCESS_CLIENT_ID:?Missing Access client ID}"
+          : "${CF_ACCESS_CLIENT_SECRET:?Missing Access client secret}"
+          headers=(-H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET")
+          for worker in cargate cargate-backend; do
+            base="https://$worker.travny.workers.dev"
+            echo "Checking $worker"
+            curl --fail --silent --show-error --retry 3 --max-time 15 "${headers[@]}" "$base/health" |
+              jq -e '.status == "ok"' >/dev/null
+            curl --fail --silent --show-error --retry 3 --max-time 15 "${headers[@]}" "$base/offers?limit=1" |
+              jq -e '(.offers | type == "array") and (.count | type == "number")' >/dev/null
+            status=$(curl --silent --show-error --max-time 15 "${headers[@]}" --output /dev/null --write-out '%{http_code}' "$base/images/smoke-missing-object")
+            test "$status" = 404
+          done
