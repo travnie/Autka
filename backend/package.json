@@ -13,7 +13,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply cargate-offers --remote"
   },
   "devDependencies": {
-    "@cloudflare/vitest-plugin": "^1.6.0",
+    "@cloudflare/vitest-plugin": "^1.8.2",
     "@cloudflare/workers-types": "^5.20261030.1",
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2",
@@ -21,6 +21,6 @@
     "wrangler": "^4.131.0"
   },
   "dependencies": {
-    "hono": "^4.13.16"
+    "hono": "^4.13.18"
   }
 }
