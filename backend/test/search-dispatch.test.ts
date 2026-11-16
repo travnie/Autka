@@ -78,6 +78,14 @@ describe("budget-gated dispatch", () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it("does not dispatch during the final minute of a UTC month", async () => {
+    await setLimit("brave", 1);
+    const send = vi.fn(async () => Response.json({}));
+    const dispatch = createBudgetedDispatch(env.DB, send, () => new Date("2041-01-31T23:59:30Z"));
+    expect(await dispatch("brave", brave(), signal())).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+  });
+
   it("returns null on an aborted send without refunding quota", async () => {
     await setLimit("brave", 1);
     const controller = new AbortController();

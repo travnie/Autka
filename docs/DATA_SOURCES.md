@@ -126,8 +126,8 @@ direct dealer/importer feeds remain parallel opportunities.
 
 ### Phase 1: backend contract and search
 
-- `POST /search/previews`: JSON `{region: "PL", query: "make model"}`. Query bounded to
-  256 characters; body <= 1 KiB. Other regions/pagination later. POST keeps terms out of URLs.
+- `POST /search/previews`: JSON `{"region": "PL", "query": "make model"}`. Query bounded to
+  256 characters; body <= 1 KiB. Other regions/pagination later. POST keeps terms out of the client-facing URL.
   Fixed provider host and marketplace allowlists; no arbitrary URLs.
 - Preview fields: title, original HTTPS URL, marketplace, provider, plain-text snippet.
   Missing structured facts stay missing; label results indexed, not verified live.
@@ -141,7 +141,9 @@ direct dealer/importer feeds remain parallel opportunities.
   remains authoritative. No persisted IP addresses. Keep original browser deep-links.
 - Enforce global monthly budget per provider (atomic reservation before outbound call),
   bounded per-client rate limits, timeouts, concurrency and query/result limits.
-  No paid overage, no background retries. Never log raw queries, credentials or snippets.
+  No paid overage, no background retries or reservation refunds. Skip dispatch during
+  final UTC minute; provider-side billing cap remains authoritative. Never log raw
+  queries, credentials or snippets.
 - Deduplicate canonical listing URL, retain functional URL parameters. Treat snippets
   as untrusted plain text; no HTML rendering. No provider-result persistence or image
   proxy/cache without explicit rights; default responses `Cache-Control: no-store`.

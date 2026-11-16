@@ -46,6 +46,7 @@ describe("indexed search endpoint", () => {
       { BSAS_API_KEY: "", TAVILY_API_KEY: "" },
     ]) expect((await call(input, overrides)).status).toBe(503);
     expect((await call(input, {}, "")).status).toBe(503);
+    expect((await call(input, {}, "bad:ip")).status).toBe(503);
     expect(send).not.toHaveBeenCalled();
   });
 

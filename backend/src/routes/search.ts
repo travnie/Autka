@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import { Hono } from "hono";
 import { readBodyUpTo } from "../lib/body";
 import { createBudgetedDispatch } from "../search/dispatch";
@@ -13,6 +14,7 @@ interface SearchEnv {
 }
 
 const MAX_REQUEST_BYTES = 1024;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
 type Send = (request: Request, init: RequestInit) => Promise<Response>;
 
 export function createSearchRouter(send?: Send) {
@@ -21,26 +23,35 @@ export function createSearchRouter(send?: Send) {
   router.post("/search/previews", async (c) => {
     c.header("Cache-Control", "no-store");
     const env = c.env;
-    if (env.ENABLE_INDEXED_SEARCH !== "true" || !env.SEARCH_RATE_LIMITER) {
+    if (env.ENABLE_INDEXED_SEARCH !== "true") {
+      return c.json({ status: "unavailable" }, 503);
+    }
+    if (!env.SEARCH_RATE_LIMITER) {
+      console.warn("indexed_search_limiter_missing");
       return c.json({ status: "unavailable" }, 503);
     }
     const keys = {
       brave: normalizedKey(env.BSAS_API_KEY ?? "") ?? undefined,
       tavily: normalizedKey(env.TAVILY_API_KEY ?? "") ?? undefined,
     };
-    if (!keys.brave && !keys.tavily) return c.json({ status: "unavailable" }, 503);
-
-    const client = c.req.header("CF-Connecting-IP");
-    if (!client || client.length > 64 || !/^[0-9a-f:.]+$/i.test(client)) {
+    if (!keys.brave && !keys.tavily) {
+      console.warn("indexed_search_keys_missing");
       return c.json({ status: "unavailable" }, 503);
     }
+
+    const client = c.req.header("CF-Connecting-IP");
+    if (!client || client.length > 64 || isIP(client) === 0) {
+      return c.json({ status: "unavailable" }, 503);
+    }
+    let stage = "rate_limit";
     try {
       const allowed = await env.SEARCH_RATE_LIMITER.limit({ key: client });
       if (!allowed.success) {
-        c.header("Retry-After", "60");
+        c.header("Retry-After", String(RATE_LIMIT_WINDOW_SECONDS));
         return c.json({ status: "rate_limited" }, 429);
       }
 
+      stage = "request_validation";
       const type = c.req.header("Content-Type")?.split(";")[0].trim().toLowerCase();
       const declared = Number(c.req.header("Content-Length") ?? 0);
       if (type !== "application/json") return c.json({ status: "invalid_query" }, 415);
@@ -51,9 +62,9 @@ export function createSearchRouter(send?: Send) {
       if (!body) return c.json({ status: "invalid_query" }, 400);
       let payload: Record<string, unknown> | null;
       try {
-        const bytes = await readBodyUpTo(body, MAX_REQUEST_BYTES, AbortSignal.timeout(2000));
+        const bytes = await readBodyUpTo(body, MAX_REQUEST_BYTES, AbortSignal.timeout(5000));
         if (!bytes) return c.json({ status: "invalid_query" }, 413);
-        payload = record(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)) as unknown);
+        payload = record(JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes)) as unknown);
       } catch {
         return c.json({ status: "invalid_query" }, 400);
       }
@@ -62,12 +73,13 @@ export function createSearchRouter(send?: Send) {
         return c.json({ status: "invalid_query" }, 400);
       }
 
+      stage = "search";
       const result = await searchPlPreviews(payload.query, keys, createBudgetedDispatch(env.DB, send));
       if (result.status === "ok") return c.json(result);
       if (result.status === "invalid_query") return c.json(result, 400);
       return c.json(result, 503);
     } catch {
-      console.warn("indexed_search_unavailable");
+      console.warn(JSON.stringify({ msg: "indexed_search_unavailable", stage }));
       return c.json({ status: "unavailable" }, 503);
     }
   });

@@ -1,5 +1,13 @@
 import { isCurrentReservation, reserveSearchBudget, type SearchProvider } from "./budget";
 
+// Conservative guard against requests crossing the UTC accounting boundary.
+const MONTH_END_GUARD_MS = 60_000;
+
+function nearMonthEnd(now: Date): boolean {
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1);
+  return next - now.getTime() <= MONTH_END_GUARD_MS;
+}
+
 type Send = (request: Request, init: RequestInit) => Promise<Response>;
 
 function isProviderRequest(provider: SearchProvider, request: Request): boolean {
@@ -32,7 +40,8 @@ export function createBudgetedDispatch(db: D1Database, send: Send = fetch, now =
       console.warn(JSON.stringify({ msg: "search_dispatch_denied", provider, reason: "reservation_denied" }));
       return null;
     }
-    if (signal.aborted || !isCurrentReservation(reservation, now())) return null;
+    const current = now();
+    if (signal.aborted || !isCurrentReservation(reservation, current) || nearMonthEnd(current)) return null;
     try {
       return await send(request, { signal, redirect: "manual" });
     } catch (error) {

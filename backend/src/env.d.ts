@@ -5,5 +5,4 @@ interface Env {
   ADMIN_TOKEN?: string;
   BSAS_API_KEY?: string;
   TAVILY_API_KEY?: string;
-  AD_API_KEY?: string;
 }
