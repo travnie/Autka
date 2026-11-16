@@ -34,7 +34,10 @@ function dispatchUntilAbort(
   signal: AbortSignal,
 ): Promise<Response | null> {
   return new Promise((resolve, reject) => {
-    const abort = () => reject(new Error("provider_timeout"));
+    const abort = () => {
+      signal.removeEventListener("abort", abort);
+      reject(new Error("provider_timeout"));
+    };
     if (signal.aborted) {
       abort();
       return;
@@ -50,9 +53,13 @@ function dispatchUntilAbort(
         if (response) discardBody(response);
         abort();
       } else {
+        signal.removeEventListener("abort", abort);
         resolve(response);
       }
-    }, reject).finally(() => signal.removeEventListener("abort", abort));
+    }, error => {
+      signal.removeEventListener("abort", abort);
+      reject(error);
+    });
   });
 }
 
