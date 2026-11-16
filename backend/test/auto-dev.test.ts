@@ -30,6 +30,17 @@ describe("Auto.dev internal evaluation", () => {
     expect(request.redirect).toBe("manual");
   });
 
+  it("preserves valid model punctuation without adding query parameters", () => {
+    const request = buildAutoDevEvaluationRequest({ make: "Chrysler", model: "Town & Country" }, "fixture-token");
+    if (!request) throw new Error("expected request");
+    const url = new URL(request.url);
+    expect(url.searchParams.get("vehicle.model")).toBe("Town & Country");
+    expect(decodeAutoDevEvaluation({ data: [
+      { ...fixture, "vehicle.make": " Chrysler ", "vehicle.model": " Town & Country " },
+    ] })[0]).toMatchObject({ make: "Chrysler", model: "Town & Country" });
+    expect(buildAutoDevEvaluationRequest({ make: "Ford", model: "F-150,Mustang" }, "fixture-token")).toBeNull();
+  });
+
   it("rejects multi-make operators and invalid credentials", () => {
     expect(buildAutoDevEvaluationRequest({ make: "Ford,Lexus" }, "fixture-token")).toBeNull();
     expect(buildAutoDevEvaluationRequest({ make: "Lexus", model: "" }, "fixture-token")).toBeNull();

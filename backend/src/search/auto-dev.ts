@@ -23,7 +23,7 @@ const FIELDS = [
 function filterTerm(value: string): string | null {
   const term = value.trim();
   return term.length >= 1 && term.length <= 40 &&
-    /^[\p{L}\p{N}][\p{L}\p{N} .-]*$/u.test(term) ? term : null;
+    /^[\p{L}\p{N}][\p{L}\p{N} .&+/-]*$/u.test(term) ? term : null;
 }
 
 export function buildAutoDevEvaluationRequest(
