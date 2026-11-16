@@ -22,18 +22,51 @@ const PROVIDERS = [
   { name: "tavily", build: buildTavilyPlRequest, decode: decodeTavilyPlResults },
 ] as const;
 
-async function readJson(response: Response): Promise<unknown> {
+function discardBody(response: Response): void {
+  // Cancellation may wait on an uncooperative source. Never block fallback on it.
+  void response.body?.cancel().catch(() => {});
+}
+
+function dispatchUntilAbort(
+  dispatch: PreviewDispatch,
+  provider: Provider,
+  request: Request,
+  signal: AbortSignal,
+): Promise<Response | null> {
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(new Error("provider_timeout"));
+    if (signal.aborted) {
+      abort();
+      return;
+    }
+    signal.addEventListener("abort", abort, { once: true });
+
+    // Handle late resolution/rejection even after timeout.
+    void Promise.resolve().then(() => {
+      if (signal.aborted) return null;
+      return dispatch(provider, request, signal);
+    }).then(response => {
+      if (signal.aborted) {
+        if (response) discardBody(response);
+      } else {
+        resolve(response);
+      }
+    }, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
+}
+
+async function readJson(response: Response, signal: AbortSignal): Promise<unknown> {
   if (!response.ok || !response.body) {
-    await response.body?.cancel();
+    discardBody(response);
     throw new Error("provider_unavailable");
   }
   const contentType = response.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase();
   const declared = Number(response.headers.get("Content-Length") ?? 0);
   if (contentType !== "application/json" || declared > MAX_BODY_BYTES) {
-    await response.body.cancel();
+    discardBody(response);
     throw new Error("invalid_provider_body");
   }
-  const body = await readBodyUpTo(response.body, MAX_BODY_BYTES);
+  const body = await readBodyUpTo(response.body, MAX_BODY_BYTES, signal);
   if (!body) throw new Error("provider_body_too_large");
   return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body)) as unknown;
 }
@@ -49,13 +82,26 @@ export async function searchPlPreviews(
   for (const provider of PROVIDERS) {
     const request = provider.build(input, keys[provider.name] ?? "");
     if (!request) continue;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    let stage = "dispatch";
     try {
-      const response = await dispatch(provider.name, request, AbortSignal.timeout(TIMEOUT_MS));
+      const response = await dispatchUntilAbort(dispatch, provider.name, request, controller.signal);
       if (!response) continue;
-      const previews = provider.decode(await readJson(response));
+      stage = "response";
+      const payload = await readJson(response, controller.signal);
+      stage = "decode";
+      const previews = provider.decode(payload);
       return { status: "ok", provider: provider.name, previews };
     } catch {
-      // No raw provider errors, query or credential logging. No retry/fan-out.
+      // Fixed diagnostic fields only. No raw provider errors, queries or credentials.
+      console.warn(JSON.stringify({
+        msg: "search_provider_failed",
+        provider: provider.name,
+        stage: controller.signal.aborted ? "timeout" : stage,
+      }));
+    } finally {
+      clearTimeout(timer);
     }
   }
   return { status: "unavailable" };

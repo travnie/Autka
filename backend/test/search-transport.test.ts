@@ -38,6 +38,9 @@ describe("Tavily indexed search", () => {
       url: offer, title: listing.title, snippet: listing.content, provider: "tavily", marketplace: "otomoto",
     }]);
     expect(() => decodeTavilyPlResults({ error: "quota" })).toThrow("invalid_tavily_response");
+    expect(decodeTavilyPlResults({ results: [
+      { ...listing, title: "Lexus" + String.fromCharCode(0, 31, 127) + "ES" },
+    ] })[0].title).toBe("Lexus ES");
   });
 });
 
@@ -69,6 +72,34 @@ describe("provider fallback transport", () => {
     });
     expect(called).toEqual(["brave"]);
   });
+
+  it("times out an unresponsive dispatcher and falls back", async () => {
+    let aborted = false;
+    const dispatch: PreviewDispatch = async (provider, _request, signal) => {
+      if (provider === "tavily") return json({ results: [listing] });
+      signal.addEventListener("abort", () => { aborted = true; }, { once: true });
+      return new Promise<Response>(() => {});
+    };
+    expect(await searchPlPreviews("Lexus", keys, dispatch)).toMatchObject({
+      status: "ok", provider: "tavily",
+    });
+    expect(aborted).toBe(true);
+  }, 10000);
+
+  it("times out a stalled response body and cancels the reader", async () => {
+    let cancelled = false;
+    const dispatch: PreviewDispatch = async provider => {
+      if (provider === "tavily") return json({ results: [listing] });
+      const body = new ReadableStream<Uint8Array>({
+        cancel() { cancelled = true; },
+      });
+      return new Response(body, { headers: { "Content-Type": "application/json" } });
+    };
+    expect(await searchPlPreviews("Lexus", keys, dispatch)).toMatchObject({
+      status: "ok", provider: "tavily",
+    });
+    expect(cancelled).toBe(true);
+  }, 10000);
 
   it("never dispatches unconfigured providers or empty queries", async () => {
     const dispatch: PreviewDispatch = async () => { throw new Error("unexpected dispatch"); };
