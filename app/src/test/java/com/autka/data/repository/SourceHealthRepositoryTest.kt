@@ -1,6 +1,8 @@
 package com.autka.data.repository
 
 import com.autka.data.remote.backend.BackendApi
+import com.autka.data.remote.backend.IndexedPreviewRequest
+import com.autka.data.remote.backend.IndexedPreviewResponse
 import com.autka.data.remote.backend.ImportServicesResponse
 import com.autka.data.remote.backend.OffersResponse
 import com.autka.data.remote.backend.SourceHealthDto
@@ -38,6 +40,9 @@ class SourceHealthRepositoryTest {
 
     private class FakeApi : BackendApi {
         var fail = false
+
+        override suspend fun indexedPreviews(request: IndexedPreviewRequest): IndexedPreviewResponse =
+            IndexedPreviewResponse("unavailable")
 
         override suspend fun sources(): SourcesResponse {
             if (fail) error("offline")
