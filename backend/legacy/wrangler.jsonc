@@ -3,7 +3,7 @@
   "name": "cargate-backend",
   "account_id": "d29db89a330417194726eb69450a4668",
   "main": "index.js",
-  "compatibility_date": "2026-11-16",
+  "compatibility_date": "2026-11-11",
   "workers_dev": true,
   "preview_urls": false,
   "services": [
@@ -11,5 +11,16 @@
       "binding": "API",
       "service": "cargate"
     }
-  ]
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.01,
+    "redact_query_string": true,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 0.01,
+      "persist": true,
+      "invocation_logs": false
+    }
+  }
 }

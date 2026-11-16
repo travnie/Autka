@@ -49,7 +49,7 @@ android {
     buildTypes {
         release {
             // Verified live: GET / returns 200 and /offers, /import-services serve JSON.
-            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate.travny.workers.dev/\"")
+            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate-backend.travny.workers.dev/\"")
             // Sample listings are useful in debug builds, but must never be mixed into
             // a production catalogue or presented as real marketplace data.
             buildConfigField("boolean", "ENABLE_MOCK_SOURCE", "false")

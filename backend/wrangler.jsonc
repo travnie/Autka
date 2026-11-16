@@ -3,7 +3,7 @@
   "name": "cargate",
   "account_id": "d29db89a330417194726eb69450a4668",
   "main": "src/index.ts",
-  "compatibility_date": "2026-11-16",
+  "compatibility_date": "2026-11-11",
   "compatibility_flags": ["nodejs_compat"],
   "preview_urls": false,
   "placement": { "mode": "smart" },

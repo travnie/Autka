@@ -54,7 +54,7 @@ The `CarOffer` shape in `src/lib/types.ts` mirrors Android
 
 ## Provisioned resources
 
-- **Worker**: `cargate` (`https://cargate.travny.workers.dev/`)
+- **Worker**: `cargate` (`https://cargate.travny.workers.dev/` (after cutover))
 - **Legacy URL**: `cargate-backend.travny.workers.dev` via the service-binding adapter in `legacy/`.
 
 - **D1**: `cargate-offers`
@@ -81,18 +81,25 @@ production configuration keeps it false.
 
 ## Deploy
 
+Cutover prerequisite: rename the existing Worker in place; verify its ID and secret
+names are unchanged. Deploy the secret-free legacy adapter with
+`npx wrangler deploy --config legacy/wrangler.jsonc`. Keep client URLs on the
+legacy hostname until both endpoints pass smoke checks. The separate
+`trvny/trvny/mcp/status-mcp/wrangler.jsonc` references the legacy service via
+`AUTKA`; verify that binding too.
+
+Smoke-check both hostnames: `GET /health`, `GET /offers`, `GET /images/missing`
+(expected 404 for missing image). Verify before shipping client URL changes.
+Compatibility date 2026-11-11: newest supported by the locked CI runtime;
+retest before raising. Run `npm run test` and `npx wrangler deploy --dry-run`.
+Only deploy the main config after completing the cutover.
+
 ```bash
 npx wrangler login
 npx wrangler secret put ADMIN_TOKEN
 npm run db:migrate:remote
 npm run deploy
 ```
-
-Rename cutover: rename the existing Worker in place (preserves its identity and secrets),
-then deploy `legacy/wrangler.jsonc` once to retain the previous hostname for installed apps.
-Do not deploy the renamed main config before this cutover. Never copy provider secrets to
-legacy. Verify both `/health` endpoints and the status-mcp binding; keep the adapter until
-old clients are retired. Deploy legacy changes with `npx wrangler deploy --config legacy/wrangler.jsonc`.
 
 The migration step is required. Migrations create the offer schema, de-duplication and
 coordinate columns, add per-source ingest leases, and remove mock rows left by older
@@ -133,5 +140,5 @@ fetches arbitrary URLs on demand.
   every source, so source health does not disappear when another source is noisy.
 - `ingest_locks` prevents overlapping snapshots for one source and uses expiring leases so
   a crashed Worker cannot block ingestion forever.
-- `ADMIN_TOKEN`, `AD_API_KEY`, `TAVILY_API_KEY` and future provider keys are Worker secrets; never commit values.
+- `ADMIN_TOKEN`, `AD_API_KEY`, `TAVILY_API_KEY`, `BSAS_API_KEY` and future provider keys are Worker secrets; never commit values.
 - Smart Placement enabled. Issues enabled; request URL query strings redacted. Keep logs sampled at 1%; invocation logs off.
