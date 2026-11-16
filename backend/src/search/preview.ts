@@ -76,13 +76,15 @@ function listing(raw: unknown) {
 export function decodePlRows(
   rows: unknown[],
   provider: IndexedPreview["provider"],
+  getSnippet: (row: Record<string, unknown>) => unknown,
 ): IndexedPreview[] {
   const seen = new Set<string>();
   const previews: IndexedPreview[] = [];
   for (const item of rows.slice(0, MAX_RESULTS)) {
     const row = record(item);
-    const match = listing(row?.url);
-    const title = text(row?.title, 200);
+    if (!row) continue;
+    const match = listing(row.url);
+    const title = text(row.title, 200);
     if (!match || !title || seen.has(match.id)) continue;
     seen.add(match.id);
     previews.push({
@@ -90,7 +92,7 @@ export function decodePlRows(
       url: match.url,
       marketplace: match.marketplace,
       provider,
-      snippet: text(provider === "brave" ? row?.description : row?.content, 500),
+      snippet: text(getSnippet(row), 500),
     });
   }
   return previews;

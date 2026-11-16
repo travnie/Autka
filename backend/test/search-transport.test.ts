@@ -62,13 +62,16 @@ describe("provider fallback transport", () => {
   });
 
   it("falls back after a non-Error dispatch rejection", async () => {
+    const called: string[] = [];
     const dispatch: PreviewDispatch = provider => {
+      called.push(provider);
       if (provider === "brave") return Promise.reject("upstream_failure");
       return Promise.resolve(json({ results: [listing] }));
     };
     expect(await searchPlPreviews("Lexus", keys, dispatch)).toMatchObject({
       status: "ok", provider: "tavily", previews: [{ url: offer }],
     });
+    expect(called).toEqual(["brave", "tavily"]);
   });
 
   it("does not fall back on a valid empty Brave response", async () => {
