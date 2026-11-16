@@ -33,11 +33,15 @@ describe("budget-gated dispatch", () => {
     const send = vi.fn(async (_request: Request, _init: RequestInit) => new Response(null, { status: 429 }));
     const dispatch = createBudgetedDispatch(env.DB, send);
     const abort = signal();
-    expect((await dispatch("brave", brave(), abort))?.status).toBe(429);
+    const request = brave();
+    expect((await dispatch("brave", request, abort))?.status).toBe(429);
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect((await dispatch("tavily", tavily(), signal()))?.status).toBe(429);
     expect(send).toHaveBeenCalledTimes(2);
-    expect(send.mock.calls[0][1]).toEqual({ signal: abort, redirect: "manual" });
+    expect(send.mock.calls[0][0]).toBe(request);
+    expect(send.mock.calls[0][1].signal).toBe(abort);
+    expect(send.mock.calls[0][1].redirect).toBe("manual");
+    expect(send.mock.calls[1][0].url).toBe(tavily().url);
   });
 
   it("rejects foreign destinations, wrong methods, redirects and aborted calls without using quota", async () => {
@@ -57,7 +61,33 @@ describe("budget-gated dispatch", () => {
     controller.abort();
     expect(await dispatch("brave", brave(), controller.signal)).toBeNull();
     expect(send).not.toHaveBeenCalled();
-    expect((await dispatch("brave", brave(), signal()))?.ok).toBe(true);
+    const request = brave();
+    expect((await dispatch("brave", request, signal()))?.ok).toBe(true);
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0][0]).toBe(request);
+  });
+
+  it("denies dispatch if the reservation month changed", async () => {
+    await setLimit("brave", 1);
+    const send = vi.fn(async () => Response.json({}));
+    const now = vi.fn()
+      .mockReturnValueOnce(new Date("2041-01-31T23:59:59Z"))
+      .mockReturnValueOnce(new Date("2041-02-01T00:00:00Z"));
+    const dispatch = createBudgetedDispatch(env.DB, send, now);
+    expect(await dispatch("brave", brave(), signal())).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("returns null on an aborted send without refunding quota", async () => {
+    await setLimit("brave", 1);
+    const controller = new AbortController();
+    const send = vi.fn(async () => {
+      controller.abort();
+      throw new Error("aborted");
+    });
+    const dispatch = createBudgetedDispatch(env.DB, send);
+    expect(await dispatch("brave", brave(), controller.signal)).toBeNull();
+    expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).toHaveBeenCalledTimes(1);
   });
 
