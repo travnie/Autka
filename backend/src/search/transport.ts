@@ -58,7 +58,7 @@ function dispatchUntilAbort(
       }
     }, error => {
       signal.removeEventListener("abort", abort);
-      reject(error);
+      reject(error instanceof Error ? error : new Error("provider_dispatch_failed"));
     });
   });
 }
@@ -91,7 +91,7 @@ export async function searchPlPreviews(
     const request = provider.build(input, keys[provider.name] ?? "");
     if (!request) continue;
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const timer = setTimeout(() => { controller.abort(); }, TIMEOUT_MS);
     let stage = "dispatch";
     try {
       const response = await dispatchUntilAbort(dispatch, provider.name, request, controller.signal);
