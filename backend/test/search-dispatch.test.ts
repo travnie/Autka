@@ -72,19 +72,20 @@ describe("budget-gated dispatch", () => {
     await setLimit("brave", 1);
     const send = vi.fn(async () => Response.json({}));
     const now = vi.fn()
-      .mockReturnValueOnce(new Date("2041-01-31T23:59:59Z"))
+      .mockReturnValueOnce(new Date("2041-01-31T23:58:59Z"))
       .mockReturnValueOnce(new Date("2041-02-01T00:00:00Z"));
     const dispatch = createBudgetedDispatch(env.DB, send, now);
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).not.toHaveBeenCalled();
   });
 
-  it("does not dispatch during the final minute of a UTC month", async () => {
+  it("does not reserve or dispatch during the final minute of a UTC month", async () => {
     await setLimit("brave", 1);
     const send = vi.fn(async () => Response.json({}));
     const dispatch = createBudgetedDispatch(env.DB, send, () => new Date("2041-01-31T23:59:30Z"));
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).not.toHaveBeenCalled();
+    expect(await env.DB.prepare("SELECT used FROM search_budgets").first()).toBeNull();
   });
 
   it("returns null on an aborted send without refunding quota", async () => {

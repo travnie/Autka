@@ -35,7 +35,9 @@ export function createBudgetedDispatch(db: D1Database, send: Send = fetch, now =
     signal: AbortSignal,
   ): Promise<Response | null> => {
     if (signal.aborted || !isProviderRequest(provider, request)) return null;
-    const reservation = await reserveSearchBudget(db, provider, 1, now());
+    const started = now();
+    if (nearMonthEnd(started)) return null;
+    const reservation = await reserveSearchBudget(db, provider, 1, started);
     if (!reservation) {
       console.warn(JSON.stringify({ msg: "search_dispatch_denied", provider, reason: "reservation_denied" }));
       return null;
