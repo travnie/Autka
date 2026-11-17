@@ -3,6 +3,7 @@ import { offersRouter } from "./routes/offers";
 import { adminRouter } from "./routes/admin";
 import { imagesRouter } from "./routes/images";
 import { importServicesRouter } from "./routes/import-services";
+import { searchRouter } from "./routes/search";
 import { runIngestion } from "./ingest/runner";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -14,6 +15,7 @@ app.route("/", offersRouter);
 app.route("/", adminRouter);
 app.route("/", imagesRouter);
 app.route("/", importServicesRouter);
+app.route("/", searchRouter);
 
 // Structured error response — no passThroughOnException; explicit handling.
 app.onError((err, c) => {

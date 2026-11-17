@@ -33,11 +33,15 @@
   "r2_buckets": [
     { "binding": "IMAGES", "bucket_name": "cargate-images" }
   ],
+  "ratelimits": [
+    { "name": "SEARCH_RATE_LIMITER", "namespace_id": "9404321", "simple": { "limit": 3, "period": 60 } }
+  ],
   "triggers": {
     "crons": []
   },
   "vars": {
     "ENVIRONMENT": "production",
-    "ENABLE_MOCK_SOURCE": "false"
+    "ENABLE_MOCK_SOURCE": "false",
+    "ENABLE_INDEXED_SEARCH": "false"
   }
 }

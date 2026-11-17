@@ -5,6 +5,7 @@ import { createBudgetedDispatch } from "../src/search/dispatch";
 const brave = () => new Request("https://api.search.brave.com/res/v1/web/search?q=Lexus", { redirect: "manual" });
 const tavily = () => new Request("https://api.tavily.com/search", { method: "POST", redirect: "manual" });
 const signal = () => new AbortController().signal;
+const fixedNow = () => new Date("2041-01-15T12:00:00Z");
 
 async function setLimit(provider: "brave" | "tavily", cap: number) {
   await env.DB.prepare(
@@ -22,7 +23,7 @@ describe("budget-gated dispatch", () => {
 
   it("never sends when a provider has no configured cap", async () => {
     const send = vi.fn(async () => Response.json({}));
-    const dispatch = createBudgetedDispatch(env.DB, send);
+    const dispatch = createBudgetedDispatch(env.DB, send, fixedNow);
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).not.toHaveBeenCalled();
   });
@@ -31,7 +32,7 @@ describe("budget-gated dispatch", () => {
     await setLimit("brave", 1);
     await setLimit("tavily", 1);
     const send = vi.fn(async (_request: Request, _init: RequestInit) => new Response(null, { status: 429 }));
-    const dispatch = createBudgetedDispatch(env.DB, send);
+    const dispatch = createBudgetedDispatch(env.DB, send, fixedNow);
     const abort = signal();
     const request = brave();
     expect((await dispatch("brave", request, abort))?.status).toBe(429);
@@ -47,7 +48,7 @@ describe("budget-gated dispatch", () => {
   it("rejects foreign destinations, wrong methods, redirects and aborted calls without using quota", async () => {
     await setLimit("brave", 1);
     const send = vi.fn(async (_request: Request, _init: RequestInit) => Response.json({}));
-    const dispatch = createBudgetedDispatch(env.DB, send);
+    const dispatch = createBudgetedDispatch(env.DB, send, fixedNow);
     for (const request of [
       new Request("https://evil.test/res/v1/web/search", { redirect: "manual" }),
       new Request("https://api.search.brave.com/other", { redirect: "manual" }),
@@ -71,11 +72,20 @@ describe("budget-gated dispatch", () => {
     await setLimit("brave", 1);
     const send = vi.fn(async () => Response.json({}));
     const now = vi.fn()
-      .mockReturnValueOnce(new Date("2041-01-31T23:59:59Z"))
+      .mockReturnValueOnce(new Date("2041-01-31T23:58:59Z"))
       .mockReturnValueOnce(new Date("2041-02-01T00:00:00Z"));
     const dispatch = createBudgetedDispatch(env.DB, send, now);
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it("does not reserve or dispatch during the final minute of a UTC month", async () => {
+    await setLimit("brave", 1);
+    const send = vi.fn(async () => Response.json({}));
+    const dispatch = createBudgetedDispatch(env.DB, send, () => new Date("2041-01-31T23:59:30Z"));
+    expect(await dispatch("brave", brave(), signal())).toBeNull();
+    expect(send).not.toHaveBeenCalled();
+    expect(await env.DB.prepare("SELECT used FROM search_budgets").first()).toBeNull();
   });
 
   it("returns null on an aborted send without refunding quota", async () => {
@@ -85,7 +95,7 @@ describe("budget-gated dispatch", () => {
       controller.abort();
       throw new Error("aborted");
     });
-    const dispatch = createBudgetedDispatch(env.DB, send);
+    const dispatch = createBudgetedDispatch(env.DB, send, fixedNow);
     expect(await dispatch("brave", brave(), controller.signal)).toBeNull();
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).toHaveBeenCalledTimes(1);
@@ -94,7 +104,7 @@ describe("budget-gated dispatch", () => {
   it("does not refund an attempt that throws", async () => {
     await setLimit("brave", 1);
     const send = vi.fn(async () => { throw new Error("network_failure"); });
-    const dispatch = createBudgetedDispatch(env.DB, send);
+    const dispatch = createBudgetedDispatch(env.DB, send, fixedNow);
     await expect(dispatch("brave", brave(), signal())).rejects.toThrow("network_failure");
     expect(await dispatch("brave", brave(), signal())).toBeNull();
     expect(send).toHaveBeenCalledTimes(1);
