@@ -111,7 +111,7 @@ as a deep-link even after a licensed feed is added.
 Goal: metasearch with original listing links, not another marketplace. No crawling,
 scheduled searches, fake offers or price extraction from snippets.
 
-Provider shortlist (pricing checked 2026-11-15; recheck terms before activation):
+Provider shortlist (pricing checked 2026-11-15; terms rechecked 2026-11-17):
 
 | Provider | Role | Published entry allowance |
 | --- | --- | --- |
@@ -135,8 +135,16 @@ direct dealer/importer feeds remain parallel opportunities.
   rather than multiplying host lists. Accept individual listing URLs, not category pages.
 - Brave adapter first; Tavily basic search fallback on unavailable/quota/transient errors.
   One provider per attempt; no automatic fan-out. Empty results are not errors.
-- Server secrets: `BSAS_API_KEY` (Brave), `TAVILY_API_KEY`. `ENABLE_INDEXED_SEARCH=false`
-  by default. Enable only after display rights, provider account caps and D1 limits verified.
+- Server secrets: `BSAS_API_KEY` (Brave), `TAVILY_API_KEY`. Missing enable flag fails closed.
+  PL pilot: `ENABLE_INDEXED_SEARCH=true` in production after owner confirmed prepaid-only
+  Brave and Tavily Researcher without pay-as-you-go (2026-11-17). Existing Access policy retained.
+  Initial D1 limits: 100 reservations/provider/UTC month, leaving headroom for other account usage.
+  Disable via flag or set provider limit to 0. Raise caps only after reviewing real usage.
+  [Brave terms](https://api-dashboard.search.brave.com/documentation/resources/terms-of-service)
+  allow results in customer applications, not resale or durable storage.
+  [Tavily display guidance](https://help.tavily.com/articles/4025347510-displaying-publishing-output)
+  permits customer-facing titles, URLs and snippets. Third-party rights remain applicable.
+  No raw API access; only bounded car listing previews.
   Per-IP Cloudflare rate limiter: 3 requests/minute/location (approximate); global D1 cap
   remains authoritative. No persisted IP addresses. Keep original browser deep-links.
 - Enforce global monthly budget per provider (atomic reservation before outbound call),
