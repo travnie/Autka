@@ -147,7 +147,7 @@ license. See [THIRD_PARTY_NOTICES](docs/THIRD_PARTY_NOTICES).
 
 <!-- markdownlint-disable MD033 -->
 <!--STARTS_HERE_QUOTE_README-->
-<i>❝“In an information economy, the most valuable company assets drive themselves home every night.  If they are not treated well, they do not return the next morning.”— Peter Chang❞</i>
+<i>❝Imagination is eye of the soul. — Anonymous❞</i>
 <!--ENDS_HERE_QUOTE_README-->
 <!-- markdownlint-enable MD033 -->
 
