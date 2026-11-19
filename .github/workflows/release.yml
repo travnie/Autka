@@ -1,5 +1,5 @@
 # Autka rolling release workflow.
-name: Rolling release
+name: 小车
 
 on: # yamllint disable-line rule:truthy
   push:
