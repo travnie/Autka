@@ -1,10 +1,11 @@
 package com.autka.data.remote.backend
 
+import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @Serializable
-data class IndexedPreviewRequest(val region: String = "PL", val query: String)
+data class IndexedPreviewRequest(@Required val region: String = "PL", val query: String)
 
 @Serializable
 data class IndexedPreview(

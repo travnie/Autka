@@ -27,8 +27,8 @@ struct MarketplaceSearchView: View {
     }
 
     @MainActor
-    private func searchIndexed() async {
-        let generation = indexedGeneration
+    private func searchIndexed(query: String, generation: Int) async {
+        guard !Task.isCancelled, indexedGeneration == generation else { return }
         indexedLoading = true
         defer {
             if indexedGeneration == generation { indexedLoading = false; indexedAttempted = true }
@@ -39,7 +39,7 @@ struct MarketplaceSearchView: View {
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.timeoutInterval = 20
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: ["region": "PL", "query": indexedQuery])
+            request.httpBody = try JSONSerialization.data(withJSONObject: ["region": "PL", "query": query])
             let (data, response) = try await URLSession.shared.data(for: request)
             guard !Task.isCancelled, indexedGeneration == generation,
                   let http = response as? HTTPURLResponse, http.statusCode == 200,
@@ -96,7 +96,9 @@ struct MarketplaceSearchView: View {
                         Button("Indexed search (Poland)") {
                             clearIndexed()
                             indexedLoading = true
-                            indexedTask = Task { await searchIndexed() }
+                            let query = indexedQuery
+                            let generation = indexedGeneration
+                            indexedTask = Task { await searchIndexed(query: query, generation: generation) }
                         }
                         .disabled(indexedQuery.isEmpty || indexedLoading)
                         if indexedLoading {
@@ -109,7 +111,8 @@ struct MarketplaceSearchView: View {
                                         Link(destination: url) {
                                             VStack(alignment: .leading, spacing: 4) {
                                                 Text(item.title)
-                                                Text(verbatim: item.marketplace == "otomoto" ? "OTOMOTO" : "OLX")
+                                                Text(verbatim: (item.marketplace == "otomoto" ? "OTOMOTO" : "OLX") +
+                                                     " · " + (item.provider == "brave" ? "Brave Search" : "Tavily"))
                                                     .font(.caption)
                                                 Text(item.snippet).font(.caption).foregroundStyle(.secondary)
                                             }
