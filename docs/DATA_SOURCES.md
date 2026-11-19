@@ -137,8 +137,12 @@ direct dealer/importer feeds remain parallel opportunities.
   One provider per attempt; no automatic fan-out. Empty results are not errors.
 - Server secrets: `BSAS_API_KEY` (Brave), `TAVILY_API_KEY`. Missing enable flag fails closed.
   PL pilot: `ENABLE_INDEXED_SEARCH=true` in production after owner confirmed prepaid-only
-  Brave and Tavily Researcher without pay-as-you-go (2026-11-17). Existing Access policy retained.
+  Brave and Tavily Researcher without pay-as-you-go (2026-11-17). Both production
+  `workers.dev` hostnames are covered by the same Access application (verified 2026-11-19);
+  preview URLs are disabled. Retain both hostnames for installed clients.
   Initial D1 limits: 100 reservations/provider/UTC month, leaving headroom for other account usage.
+  Missing/zero cap denies dispatch, not unlimited usage. Fresh/recreated D1 requires explicit
+  operator provisioning and verification; see [deployment and smoke](../backend/README.md#deploy).
   Disable via flag or set provider limit to 0. Raise caps only after reviewing real usage.
   [Brave terms](https://api-dashboard.search.brave.com/documentation/resources/terms-of-service)
   allow results in customer applications, not resale or durable storage.

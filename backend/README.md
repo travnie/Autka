@@ -93,6 +93,11 @@ After deployment, smoke-check both hostnames with authorized Access credentials:
 The manual Worker smoke workflow requires `CF_ACCESS_CLIENT_ID` and
 `CF_ACCESS_CLIENT_SECRET` repository secrets. It tests live deployments, not PR code.
 Verify before shipping client URL changes.
+For the indexed-search pilot, additionally dispatch the smoke workflow with
+`indexed_search=true` after deploying the enabled Worker. It checks unauthenticated
+POST rejection on both hostnames with a deliberately invalid body (no provider call),
+then makes one authorized PL preview request on the canonical hostname, without retries.
+At most one reservation per provider per run; do not schedule this smoke.
 Compatibility date 2026-11-11: newest supported by the locked CI runtime;
 retest before raising. Run `npm run test` and `npx wrangler deploy --dry-run`.
 Only deploy the main config after completing the cutover.
@@ -104,7 +109,24 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
-The migration step is required. Migrations create the offer schema, de-duplication and
+The migration step is required. Before enabling indexed search, provision the
+operator-owned provider caps in the target D1 database (after migrations). For a new
+production database only, initialize the approved pilot limits without overwriting
+any existing cap or kill switch:
+
+```sql
+INSERT INTO search_provider_limits (provider, monthly_limit)
+VALUES ('brave', 100), ('tavily', 100)
+ON CONFLICT(provider) DO NOTHING;
+SELECT provider, monthly_limit FROM search_provider_limits ORDER BY provider;
+```
+
+Run against `cargate-offers` using `npx wrangler d1 execute cargate-offers --remote --command`
+with the SQL above. Verify both limits, provider-side billing caps and Access coverage
+for both Worker hostnames before enabling the flag. Missing/zero caps deny dispatch;
+never seed them automatically in migrations or reset an operator's disabled provider.
+
+Migrations create the offer schema, de-duplication and
 coordinate columns, add per-source ingest leases, and remove mock rows left by older
 production deployments.
 
