@@ -106,7 +106,6 @@ Only deploy the main config after completing the cutover.
 npx wrangler login
 npx wrangler secret put ADMIN_TOKEN
 npm run db:migrate:remote
-npm run deploy
 ```
 
 The migration step is required. Before enabling indexed search, provision the
@@ -114,17 +113,26 @@ operator-owned provider caps in the target D1 database (after migrations). For a
 production database only, initialize the approved pilot limits without overwriting
 any existing cap or kill switch:
 
-```sql
-INSERT INTO search_provider_limits (provider, monthly_limit)
-VALUES ('brave', 100), ('tavily', 100)
-ON CONFLICT(provider) DO NOTHING;
-SELECT provider, monthly_limit FROM search_provider_limits ORDER BY provider;
+```bash
+npx wrangler d1 execute cargate-offers --remote --command \
+  "INSERT INTO search_provider_limits (provider, monthly_limit) VALUES ('brave', 100), ('tavily', 100) ON CONFLICT(provider) DO NOTHING;"
 ```
 
-Run against `cargate-offers` using `npx wrangler d1 execute cargate-offers --remote --command`
-with the SQL above. Verify both limits, provider-side billing caps and Access coverage
-for both Worker hostnames before enabling the flag. Missing/zero caps deny dispatch;
+For every pilot deployment, inspect the actual limits:
+
+```bash
+npx wrangler d1 execute cargate-offers --remote --command \
+  "SELECT provider, monthly_limit FROM search_provider_limits ORDER BY provider;"
+```
+
+Verify both limits, provider-side billing caps and Access coverage for both hostnames
+before deploying with indexed search enabled. Missing/zero caps deny dispatch;
 never seed them automatically in migrations or reset an operator's disabled provider.
+Keep the flag disabled if the prerequisites are not met.
+
+```bash
+npm run deploy
+```
 
 Migrations create the offer schema, de-duplication and
 coordinate columns, add per-source ingest leases, and remove mock rows left by older
