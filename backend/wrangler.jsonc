@@ -42,6 +42,6 @@
   "vars": {
     "ENVIRONMENT": "production",
     "ENABLE_MOCK_SOURCE": "false",
-    "ENABLE_INDEXED_SEARCH": "false"
+    "ENABLE_INDEXED_SEARCH": "true"
   }
 }

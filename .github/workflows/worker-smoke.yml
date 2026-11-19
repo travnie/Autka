@@ -2,6 +2,11 @@ name: Worker smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      indexed_search:
+        description: Verify enabled PL pilot (consumes up to one reservation per provider)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,3 +37,29 @@ jobs:
             status=$(curl --silent --show-error --max-time 15 "${headers[@]}" --output /dev/null --write-out '%{http_code}' "$base/images/smoke-missing-object")
             test "$status" = 404
           done
+      - name: Verify enabled PL pilot and Access
+        if: inputs.indexed_search
+        shell: bash
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          : "${CF_ACCESS_CLIENT_ID:?Missing Access client ID}"
+          : "${CF_ACCESS_CLIENT_SECRET:?Missing Access client secret}"
+          for worker in cargate cargate-backend; do
+            # Invalid payload never reaches provider dispatch, even if Access is misconfigured.
+            status=$(curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' \
+              -H 'Content-Type: application/json' --data '{}' "https://$worker.travny.workers.dev/search/previews")
+            case "$status" in
+              302|303|307|308|401|403) ;;
+              *) echo "Unexpected unauthenticated status for $worker: $status"; exit 1 ;;
+            esac
+          done
+          # One bounded query, no retry and no result output.
+          curl --fail --silent --show-error --max-time 20 \
+            -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
+            -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET" \
+            -H 'Content-Type: application/json' --data '{"region":"PL","query":"Toyota Corolla"}' \
+            https://cargate.travny.workers.dev/search/previews |
+            jq -e '.status == "ok" and (.provider == "brave" or .provider == "tavily") and (.previews | type == "array" and length <= 20)' >/dev/null
