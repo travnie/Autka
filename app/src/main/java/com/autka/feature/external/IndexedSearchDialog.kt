@@ -77,7 +77,11 @@ fun IndexedSearchDialog(
                                 ) {
                                     Text(item.title, style = MaterialTheme.typography.titleSmall)
                                     Text(
-                                        if (item.marketplace == "otomoto") "OTOMOTO" else "OLX",
+                                        buildString {
+                                            append(if (item.marketplace == "otomoto") "OTOMOTO" else "OLX")
+                                            append(" · ")
+                                            append(if (item.provider == "brave") "Brave Search" else "Tavily")
+                                        },
                                         style = MaterialTheme.typography.labelMedium,
                                     )
                                     Text(item.snippet, style = MaterialTheme.typography.bodySmall)

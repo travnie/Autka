@@ -1,5 +1,8 @@
 package com.autka.data.remote.backend
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -9,6 +12,15 @@ class IndexedPreviewDecoderTest {
         "Lexus ES", "https://www.otomoto.pl/osobowe/oferta/lexus-ID123.html",
         "otomoto", "brave", "Indexed listing",
     )
+
+    @Test
+    fun requestAlwaysEncodesRegion() {
+        val payload = Json.parseToJsonElement(
+            Json.encodeToString(IndexedPreviewRequest(query = "Lexus ES")),
+        ).jsonObject
+        assertEquals("PL", payload["region"]?.jsonPrimitive?.content)
+        assertEquals("Lexus ES", payload["query"]?.jsonPrimitive?.content)
+    }
 
     @Test
     fun filtersUnsafeLinksAndUntrustedProviders() {
