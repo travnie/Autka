@@ -1,5 +1,6 @@
 package com.autka.data.remote.backend
 
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -16,10 +17,23 @@ class IndexedPreviewDecoderTest {
     @Test
     fun requestAlwaysEncodesRegion() {
         val payload = Json.parseToJsonElement(
-            Json.encodeToString(IndexedPreviewRequest(query = "Lexus ES")),
+            Json.encodeToString(IndexedPreviewRequest(region = INDEXED_PREVIEW_REGION_PL, query = "Lexus ES")),
         ).jsonObject
         assertEquals("PL", payload["region"]?.jsonPrimitive?.content)
         assertEquals("Lexus ES", payload["query"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun acceptsOlxLinksAndRejectsMismatchedMarketplace() {
+        val olx = offer.copy(
+            url = "https://www.olx.pl/d/oferta/bmw-seria-3-CID5-IDabc123.html",
+            marketplace = "olx",
+        )
+        val response = IndexedPreviewResponse("ok", "brave", listOf(
+            olx,
+            offer.copy(marketplace = "olx"),
+        ))
+        assertEquals(listOf(olx), IndexedPreviewDecoder.decode(response))
     }
 
     @Test

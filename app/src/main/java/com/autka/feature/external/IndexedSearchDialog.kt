@@ -1,5 +1,6 @@
 package com.autka.feature.external
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -21,11 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.autka.R
+import com.autka.data.remote.backend.INDEXED_QUERY_MAX_UTF16_UNITS
 import com.autka.data.remote.backend.IndexedPreview
+import com.autka.data.remote.backend.takeUtf16Units
 import kotlinx.coroutines.launch
 
 @Composable
@@ -40,6 +47,22 @@ fun IndexedSearchDialog(
     var results by remember { mutableStateOf<List<IndexedPreview>?>(null) }
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+
+    fun performSearch() {
+        if (loading || query.isBlank()) return
+        loading = true
+        attempted = false
+        results = null
+        scope.launch {
+            try {
+                results = onSearch(query.trim())
+                attempted = true
+            } finally {
+                loading = false
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -50,13 +73,15 @@ fun IndexedSearchDialog(
                 OutlinedTextField(
                     value = query,
                     onValueChange = {
-                        query = it.take(256)
+                        query = it.takeUtf16Units(INDEXED_QUERY_MAX_UTF16_UNITS)
                         results = null
                         attempted = false
                     },
                     enabled = !loading,
                     singleLine = true,
                     label = { Text(stringResource(R.string.search_hint)) },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { performSearch() }),
                 )
                 if (loading) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -72,7 +97,13 @@ fun IndexedSearchDialog(
                             items(items, key = { it.url }) { item ->
                                 Column(
                                     Modifier.fillMaxWidth().clickable {
-                                        runCatching { uriHandler.openUri(item.url) }
+                                        runCatching { uriHandler.openUri(item.url) }.onFailure {
+                                            Toast.makeText(
+                                                context,
+                                                R.string.no_browser,
+                                                Toast.LENGTH_SHORT,
+                                            ).show()
+                                        }
                                     }.padding(vertical = 6.dp),
                                 ) {
                                     Text(item.title, style = MaterialTheme.typography.titleSmall)
@@ -95,19 +126,7 @@ fun IndexedSearchDialog(
         confirmButton = {
             TextButton(
                 enabled = query.isNotBlank() && !loading,
-                onClick = {
-                    loading = true
-                    attempted = false
-                    results = null
-                    scope.launch {
-                        try {
-                            results = onSearch(query.trim())
-                            attempted = true
-                        } finally {
-                            loading = false
-                        }
-                    }
-                },
+                onClick = { performSearch() },
             ) { Text(stringResource(R.string.indexed_search_action)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },

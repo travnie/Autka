@@ -14,7 +14,16 @@ struct MarketplaceSearchView: View {
     @State private var indexedGeneration = 0
 
     private var indexedQuery: String {
-        String([make, model].joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines).prefix(256))
+        // The backend caps queries at 256 UTF-16 code units, not Swift Characters.
+        let raw = [make, model].joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        var units = Array(raw.utf16)
+        if units.count > 256 {
+            units = Array(units.prefix(256))
+            if let last = units.last, (0xD800...0xDBFF).contains(last) {
+                units.removeLast()
+            }
+        }
+        return String(decoding: units, as: UTF16.self)
     }
 
     private func clearIndexed() {

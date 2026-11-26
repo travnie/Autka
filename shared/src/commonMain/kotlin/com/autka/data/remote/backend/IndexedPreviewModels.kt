@@ -1,11 +1,23 @@
 package com.autka.data.remote.backend
 
-import kotlinx.serialization.Required
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+/** Wire region code the /search/previews endpoint expects for the PL pilot. */
+const val INDEXED_PREVIEW_REGION_PL = "PL"
+
+/** Backend rejects queries longer than 256 JavaScript UTF-16 code units. */
+const val INDEXED_QUERY_MAX_UTF16_UNITS = 256
+
+/** Truncates to [maxUnits] UTF-16 code units without splitting a surrogate pair. */
+fun String.takeUtf16Units(maxUnits: Int): String {
+    if (length <= maxUnits) return this
+    val cut = take(maxUnits)
+    return if (cut.last().isHighSurrogate()) cut.dropLast(1) else cut
+}
+
 @Serializable
-data class IndexedPreviewRequest(@Required val region: String = "PL", val query: String)
+data class IndexedPreviewRequest(val region: String, val query: String)
 
 @Serializable
 data class IndexedPreview(

@@ -47,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +67,8 @@ import com.autka.core.model.ExchangeRates
 import com.autka.core.model.Region
 import com.autka.core.model.SavedSearch
 import com.autka.core.model.SearchFilter
+import com.autka.data.remote.backend.INDEXED_QUERY_MAX_UTF16_UNITS
+import com.autka.data.remote.backend.takeUtf16Units
 import com.autka.feature.external.MarketplaceLinksRow
 import com.autka.feature.external.IndexedSearchDialog
 import com.autka.ui.components.EmptyState
@@ -84,7 +87,7 @@ fun ListingsRoute(
     viewModel: ListingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var showIndexedSearch by remember { mutableStateOf(false) }
+    var showIndexedSearch by rememberSaveable { mutableStateOf(false) }
     ListingsScreen(
         uiState = uiState,
         onIndexedSearch = { showIndexedSearch = true },
@@ -104,7 +107,9 @@ fun ListingsRoute(
     )
     if (showIndexedSearch) {
         val query = listOfNotNull(uiState.filter.make, uiState.filter.model, uiState.filter.query)
-            .filter { it.isNotBlank() }.joinToString(" ").take(256)
+            .filter { it.isNotBlank() }
+            .joinToString(" ")
+            .takeUtf16Units(INDEXED_QUERY_MAX_UTF16_UNITS)
         IndexedSearchDialog(query, viewModel::indexedPreviews) { showIndexedSearch = false }
     }
 }
