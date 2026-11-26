@@ -33,6 +33,31 @@ permissions:
   contents: read
 
 jobs:
+  scope:
+    runs-on: ubuntu-slim
+    outputs:
+      intel: ${{ steps.diff.outputs.intel }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Select Intel tests
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          intel=true
+          if [ "$GITHUB_EVENT_NAME" != workflow_dispatch ] && [[ -n "$BASE_SHA" && ! "$BASE_SHA" =~ ^0+$ ]]; then
+            if git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null || git fetch --no-tags --depth=1 origin "$BASE_SHA"; then
+              if git diff --quiet "$BASE_SHA" HEAD -- shared/ build.gradle.kts settings.gradle.kts gradle.properties \
+                gradlew gradlew.bat gradle/ .github/workflows/shared-ios-ci.yml; then
+                intel=false
+              fi
+            fi
+          fi
+          echo "intel=$intel" >> "$GITHUB_OUTPUT"
+
   arm64:
     name: Build & test shared iOS (arm64)
     runs-on: macos-15
@@ -77,6 +102,8 @@ jobs:
           if-no-files-found: error
 
   x64:
+    needs: scope
+    if: ${{ !cancelled() && (needs.scope.result != 'success' || needs.scope.outputs.intel != 'false') }}
     name: Build & test shared iOS (x64)
     runs-on: macos-15-intel
     timeout-minutes: 30
