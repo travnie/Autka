@@ -10,6 +10,7 @@ on:
       - 'settings.gradle.kts'
       - 'gradle.properties'
       - 'gradlew'
+      - '.gitattributes'
       - 'gradle/**'
       - '.github/workflows/shared-ios-ci.yml'
   pull_request:
@@ -21,6 +22,7 @@ on:
       - 'settings.gradle.kts'
       - 'gradle.properties'
       - 'gradlew'
+      - '.gitattributes'
       - 'gradle/**'
       - '.github/workflows/shared-ios-ci.yml'
   workflow_dispatch:
@@ -35,6 +37,9 @@ permissions:
 jobs:
   scope:
     runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      actions: read
     outputs:
       intel: ${{ steps.diff.outputs.intel }}
     steps:
@@ -45,13 +50,20 @@ jobs:
       - name: Select Intel tests
         id: diff
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           intel=true
+          # Compare main to the last successful workflow, not an untested preceding push.
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            endpoint="repos/$GITHUB_REPOSITORY/actions/workflows/shared-ios-ci.yml/runs"
+            BASE_SHA="$(gh api "$endpoint?branch=main&event=push&status=success&per_page=1" \
+              --jq '.workflow_runs[0].head_sha // empty')" || BASE_SHA=""
+          fi
           if [ "$GITHUB_EVENT_NAME" != workflow_dispatch ] && [[ -n "$BASE_SHA" && ! "$BASE_SHA" =~ ^0+$ ]]; then
             if git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null || git fetch --no-tags --depth=1 origin "$BASE_SHA"; then
               if git diff --quiet "$BASE_SHA" HEAD -- shared/ build.gradle.kts settings.gradle.kts gradle.properties \
-                gradlew gradlew.bat gradle/ .github/workflows/shared-ios-ci.yml; then
+                gradlew .gitattributes gradle/ .github/workflows/shared-ios-ci.yml; then
                 intel=false
               fi
             fi

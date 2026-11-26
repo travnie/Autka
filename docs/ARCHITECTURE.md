@@ -182,8 +182,9 @@ input/response handling, listings behavior, repository failure isolation, exchan
 paths and source-health refresh semantics.
 
 `.github/workflows/shared-ios-ci.yml` links the shared framework for iOS devices and both
-ARM64 and x64 simulators, and runs the shared test suite on both simulator architectures.
-This keeps the common module honest before a dedicated iOS app host is introduced.
+ARM64 and x64 simulators. ARM64 tests run on every iOS CI run; Intel tests run for shared
+Kotlin/Gradle/checkout-rule changes and manual runs. Main compares against the last successful
+CI run; unknown baselines retain Intel tests.
 
 For pull requests, `.github/workflows/backend-ci.yml` regenerates Wrangler configuration
 types, runs TypeScript checking and executes backend tests. On pushes to `main`, the same
