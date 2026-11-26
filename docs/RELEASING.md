@@ -16,8 +16,7 @@ versionCode = <next integer>
 versionName = "<next version>"
 ```
 
-`versionCode` must increase for store releases. The `v*` Git tag must match the resulting
-`versionName` exactly; the release workflow checks this and fails if they differ.
+`versionCode` must increase for store releases. Rolling GitHub release: `autka-latest`.
 
 Add matching Fastlane changelog files for the new `versionCode`:
 
@@ -60,25 +59,9 @@ then runs the signed APK/AAB build.
 
 ## 3. Create the GitHub release
 
-After committing the version bump, tag the **exact** `versionName` from
-`app/build.gradle.kts`:
-
-```bash
-git tag v<versionName>
-git push origin v<versionName>
-```
-
-For example, if Gradle contains `versionName = "0.2.0"`, the tag is `v0.2.0`.
-
-The workflow:
-
-1. verifies the tag matches `versionName`;
-2. validates the signing secrets;
-3. builds release APK and AAB artifacts;
-4. verifies that the APK/AAB are signed;
-5. publishes a GitHub release with generated notes.
-
-The workflow can also be dispatched manually for an **existing** `v*` tag.
+Push release-relevant changes to `main`. Android CI runs build, tests, lint and emulator
+smoke before invoking the release workflow. Release builds and verifies signed APK/AAB,
+then replaces assets on `autka-latest`. Manual recovery: dispatch `小车` on `main`.
 
 ## 4. Google Play
 
@@ -112,7 +95,7 @@ submission would still need its own `fdroiddata` build recipe and review.
 
 ## Release safety checklist
 
-- `versionCode` increased and `versionName` matches the intended `v*` tag.
+- `versionCode` increased for store release; `versionName` correct.
 - EN/PL changelog entries added for the new `versionCode`.
 - Release keystore and passwords are backed up.
 - All four Actions signing secrets are present and still match the keystore.

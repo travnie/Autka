@@ -16,6 +16,7 @@ on: # yamllint disable-line rule:truthy
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
   release:
@@ -171,12 +172,20 @@ jobs:
         run: |
           set -euo pipefail
           tag="autka-latest"
-          # Never publish a superseded Android tree, even after a rerun.
-          git fetch --no-tags --depth=1 origin main
-          if ! git diff --quiet HEAD FETCH_HEAD -- app/ shared/ gradle/ gradlew gradlew.bat build.gradle.kts \
-            settings.gradle.kts gradle.properties .github/workflows/release.yml; then
-            echo 'A newer release input tree exists on main; skipping stale build.'
-            exit 0
+          # A newer verified main run supersedes old reruns; an untested push does not.
+          endpoint="repos/$GH_REPO/actions/workflows/android-ci.yml/runs"
+          verified="$(gh api "$endpoint?branch=main&event=push&status=success&per_page=1" \
+            --jq '.workflow_runs[0].head_sha // empty')"
+          if [ -n "$verified" ]; then
+            relation="$(gh api "repos/$GH_REPO/compare/$GITHUB_SHA...$verified" --jq .status)"
+            if [ "$relation" = ahead ]; then
+              echo "A newer verified main run exists; skipping stale release."
+              exit 0
+            fi
+            if [ "$relation" = diverged ]; then
+              echo "::error::Verified main history diverged."
+              exit 1
+            fi
           fi
 
           cat > release-notes.md <<EOF
@@ -201,7 +210,15 @@ jobs:
             dist/autka.apk \
             dist/autka.aab \
             --clobber
-          gh api --method PATCH "repos/$GH_REPO/git/refs/tags/$tag" -f sha="$GITHUB_SHA" -F force=true
+          lookup_err="$RUNNER_TEMP/rolling-tag.err"
+          if gh api "repos/$GH_REPO/git/ref/tags/$tag" >/dev/null 2>"$lookup_err"; then
+            gh api --method PATCH "repos/$GH_REPO/git/refs/tags/$tag" -f sha="$GITHUB_SHA" -F force=true
+          elif grep -q 'HTTP 404' "$lookup_err"; then
+            gh api --method POST "repos/$GH_REPO/git/refs" -f ref="refs/tags/$tag" -f sha="$GITHUB_SHA"
+          else
+            cat "$lookup_err" >&2
+            exit 1
+          fi
           gh release edit "$tag" --draft=false --latest
 
           gh release delete v0.0.2 --yes 2>/dev/null || true

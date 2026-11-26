@@ -36,7 +36,7 @@ on:
 
 # Cancel an in-progress run when a newer commit is pushed to the same ref.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -150,6 +150,7 @@ jobs:
     needs: [build, emulator-smoke]
     permissions:
       contents: write
+      actions: read
     uses: ./.github/workflows/release.yml
     secrets:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
