@@ -56,8 +56,8 @@ def plan(event, base_sha):
 
 def matrix(selected):
     return [
-        dict(zip(("language", "build-mode", "runner"), row))
-        for row in ROWS if row[0] in selected
+        dict(zip(("language", "build-mode", "runner"), row), required=row[0] in selected)
+        for row in ROWS
     ]
 
 
