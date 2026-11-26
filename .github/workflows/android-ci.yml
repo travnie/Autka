@@ -3,11 +3,33 @@ name: Android CI
 on:
   push:
     branches: [ main ]
-    # Backend-, docs- and iOS-only changes can't affect the Android build, so skip them.
-    paths-ignore: [ 'backend/**', 'iosApp/**', '**/*.md', 'docs/**', 'LICENSE', '.github/workflows/backend-ci.yml', '.github/workflows/shared-ios-ci.yml' ]
+    # Android inputs only: unrelated automation, backend and iOS changes need no Android runner.
+    paths:
+      - 'app/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/actions/**'
+      - '.github/workflows/android-ci.yml'
+      - '.github/workflows/release.yml'
   pull_request:
     branches: [ main ]
-    paths-ignore: [ 'backend/**', 'iosApp/**', '**/*.md', 'docs/**', 'LICENSE', '.github/workflows/backend-ci.yml', '.github/workflows/shared-ios-ci.yml' ]
+    paths:
+      - 'app/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/actions/**'
+      - '.github/workflows/android-ci.yml'
+      - '.github/workflows/release.yml'
   workflow_dispatch:
 
 # Cancel an in-progress run when a newer commit is pushed to the same ref.
