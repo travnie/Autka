@@ -20,7 +20,7 @@ android {
     namespace = "com.autka"
     compileSdk = 37
     // Compose 1.13.0 AARs require compiling against at least android-37.1.
-    compileSdkMinor = "1"
+    compileSdkMinor = 1
 
     defaultConfig {
         applicationId = "com.autka"
