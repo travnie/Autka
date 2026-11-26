@@ -11,6 +11,8 @@ kotlin {
     android {
         namespace = "com.autka.shared"
         compileSdk = 37
+        // Compose 1.13.0 AARs require compiling against at least android-37.1.
+        compileSdkMinor = "1"
         minSdk = 26
         withHostTestBuilder {}.configure {}
         compilerOptions {
