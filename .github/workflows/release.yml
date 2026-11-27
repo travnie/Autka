@@ -48,7 +48,7 @@ jobs:
                 old_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/autka-latest" --jq .object.sha)"
                 git cat-file -e "$old_sha^{commit}" 2>/dev/null || git fetch --no-tags --depth=1 origin "$old_sha"
                 if git diff --quiet "$old_sha" HEAD -- app/ shared/ gradle/ gradlew gradlew.bat build.gradle.kts \
-                  settings.gradle.kts gradle.properties .github/workflows/release.yml; then
+                  settings.gradle.kts gradle.properties .gitattributes .github/workflows/release.yml; then
                   required=false
                 fi
               fi
@@ -210,17 +210,28 @@ jobs:
           endpoint="repos/$GH_REPO/actions/workflows/android-ci.yml/runs"
           verified="$(gh api "$endpoint?branch=main&event=push&status=success&per_page=1" \
             --jq '.workflow_runs[0].head_sha // empty')"
-          # A successful run from removed main history must not block recovery forever.
-          # Only a verified commit still reachable from current main can supersede this build.
-          if [ -n "$verified" ]; then
+          if [ -n "$verified" ] && [ "$recover" != true ]; then
             verify_err="$RUNNER_TEMP/verified-history.err"
+            reachable=false
             if verified_relation="$(gh api "repos/$GH_REPO/compare/$verified...main" --jq .status 2>"$verify_err")"; then
               if [ "$verified_relation" = ahead ] || [ "$verified_relation" = identical ]; then
+                reachable=true
                 check_candidate "$verified"
               fi
             elif ! grep -q 'HTTP 404' "$verify_err"; then
               cat "$verify_err" >&2
               exit 1
+            fi
+            # Rewritten history: a single orphaned CI result cannot establish freshness.
+            # Conservatively publish only the current release-input tree. Keep last good
+            # downloads until current main passes, rather than guessing from old runs.
+            if [ "$reachable" != true ]; then
+              git fetch --no-tags --depth=1 origin main
+              if ! git diff --quiet HEAD FETCH_HEAD -- app/ shared/ gradle/ gradlew gradlew.bat \
+                build.gradle.kts settings.gradle.kts gradle.properties .gitattributes .github/workflows/release.yml; then
+                echo "::warning::Rewritten history; candidate differs from current release inputs. Skipping."
+                exit 0
+              fi
             fi
           fi
 
