@@ -18,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,21 +47,34 @@ fun IndexedSearchDialog(
     var loading by remember { mutableStateOf(false) }
     var attempted by remember { mutableStateOf(false) }
     var results by remember { mutableStateOf<List<IndexedPreview>?>(null) }
+    var generation by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
+    // A new initialQuery starts a new dialog session: drop stale results and let
+    // in-flight searches finish without writing into the new session.
+    LaunchedEffect(initialQuery) {
+        generation++
+        results = null
+        attempted = false
+    }
+
     fun performSearch() {
         if (loading || query.isBlank()) return
+        val gen = generation
         loading = true
         attempted = false
         results = null
         scope.launch {
             try {
-                results = onSearch(query.trim())
-                attempted = true
+                val previews = onSearch(query.trim())
+                if (gen == generation) {
+                    results = previews
+                    attempted = true
+                }
             } finally {
-                loading = false
+                if (gen == generation) loading = false
             }
         }
     }
