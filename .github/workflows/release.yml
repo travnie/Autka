@@ -21,7 +21,7 @@ permissions:
 jobs:
   release:
     name: Build and publish rolling release
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_call' || github.event_name == 'workflow_dispatch')
     concurrency:
       group: autka-rolling-release
       cancel-in-progress: false
@@ -41,7 +41,7 @@ jobs:
         run: |
           set -euo pipefail
           required=true
-          if [ "$GITHUB_EVENT_NAME" = push ]; then
+          if [ "$GITHUB_EVENT_NAME" != workflow_dispatch ]; then
             lookup_err="$RUNNER_TEMP/release-scope.err"
             if published="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/autka-latest" --jq 'if .draft then "" else (.id | tostring) end' 2>"$lookup_err")"; then
               if [ -n "$published" ]; then
@@ -182,7 +182,7 @@ jobs:
             local baseline="$1" relation
             [ -n "$baseline" ] || return 0
             relation="$(gh api "repos/$GH_REPO/compare/$GITHUB_SHA...$baseline" --jq .status)" || exit 1
-            if [ "$relation" = ahead ]; then
+            if [ "$relation" = ahead ] && [ "$recover" != true ]; then
               echo "A newer verified or published build exists; skipping stale release."
               exit 0
             fi
