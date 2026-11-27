@@ -58,6 +58,7 @@ fun IndexedSearchDialog(
         generation++
         results = null
         attempted = false
+        loading = false
     }
 
     fun performSearch() {
