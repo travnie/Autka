@@ -35,6 +35,7 @@ import com.autka.R
 import com.autka.data.remote.backend.INDEXED_QUERY_MAX_UTF16_UNITS
 import com.autka.data.remote.backend.IndexedPreview
 import com.autka.data.remote.backend.takeUtf16Units
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 @Composable
@@ -48,14 +49,17 @@ fun IndexedSearchDialog(
     var attempted by remember { mutableStateOf(false) }
     var results by remember { mutableStateOf<List<IndexedPreview>?>(null) }
     var generation by remember { mutableStateOf(0) }
+    var searchJob by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
-    // A new initialQuery starts a new dialog session: drop stale results and let
-    // in-flight searches finish without writing into the new session.
+    // A new initialQuery starts a new dialog session: cancel any in-flight search
+    // (it would otherwise burn provider quota) and drop its stale state.
     LaunchedEffect(initialQuery) {
         generation++
+        searchJob?.cancel()
+        searchJob = null
         results = null
         attempted = false
         loading = false
@@ -67,7 +71,7 @@ fun IndexedSearchDialog(
         loading = true
         attempted = false
         results = null
-        scope.launch {
+        searchJob = scope.launch {
             try {
                 val previews = onSearch(query.trim())
                 if (gen == generation) {
