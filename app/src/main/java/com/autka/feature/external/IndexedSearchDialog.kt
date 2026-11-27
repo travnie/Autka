@@ -42,7 +42,7 @@ fun IndexedSearchDialog(
     onSearch: suspend (String) -> List<IndexedPreview>?,
     onDismiss: () -> Unit,
 ) {
-    var query by rememberSaveable { mutableStateOf(initialQuery) }
+    var query by rememberSaveable(initialQuery) { mutableStateOf(initialQuery) }
     var loading by remember { mutableStateOf(false) }
     var attempted by remember { mutableStateOf(false) }
     var results by remember { mutableStateOf<List<IndexedPreview>?>(null) }
