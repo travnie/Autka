@@ -178,6 +178,14 @@ jobs:
             current="$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)"
             if [ "$current" = "$GITHUB_SHA" ]; then recover=true; fi
           fi
+          # Reject automatic builds removed from main, including stale reruns after rewinds.
+          if [ "$recover" != true ]; then
+            current_relation="$(gh api "repos/$GH_REPO/compare/$GITHUB_SHA...main" --jq .status)"
+            if [ "$current_relation" != ahead ] && [ "$current_relation" != identical ]; then
+              echo "::warning::Build is no longer on main; skipping stale release."
+              exit 0
+            fi
+          fi
           check_candidate() {
             local baseline="$1" relation
             [ -n "$baseline" ] || return 0
@@ -202,7 +210,19 @@ jobs:
           endpoint="repos/$GH_REPO/actions/workflows/android-ci.yml/runs"
           verified="$(gh api "$endpoint?branch=main&event=push&status=success&per_page=1" \
             --jq '.workflow_runs[0].head_sha // empty')"
-          check_candidate "$verified"
+          # A successful run from removed main history must not block recovery forever.
+          # Only a verified commit still reachable from current main can supersede this build.
+          if [ -n "$verified" ]; then
+            verify_err="$RUNNER_TEMP/verified-history.err"
+            if verified_relation="$(gh api "repos/$GH_REPO/compare/$verified...main" --jq .status 2>"$verify_err")"; then
+              if [ "$verified_relation" = ahead ] || [ "$verified_relation" = identical ]; then
+                check_candidate "$verified"
+              fi
+            elif ! grep -q 'HTTP 404' "$verify_err"; then
+              cat "$verify_err" >&2
+              exit 1
+            fi
+          fi
 
           cat > release-notes.md <<EOF
           Signed Android builds from \`${GITHUB_SHA}\`.
