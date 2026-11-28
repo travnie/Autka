@@ -55,13 +55,25 @@ The `CarOffer` shape in `src/lib/types.ts` mirrors Android
 ## Provisioned resources
 
 - **Worker**: `cargate` (`https://cargate.travny.workers.dev/`)
-- **Legacy URL**: `cargate-backend.travny.workers.dev` via the service-binding adapter in `legacy/`.
-
 - **D1**: `cargate-offers`
 - **R2**: `cargate-images`
 
-Both are wired in `wrangler.jsonc`. The legacy resource names are infrastructure identifiers;
-they do not change the product name back from Autka.
+D1 and R2 bindings live in `wrangler.jsonc`.
+
+## Client migration
+
+Single Worker by owner request. Removing adapter source does not delete the deployed Worker.
+
+Cutover checklist (record results in PR #300):
+
+1. Merge after CI; publish the signed rolling Android release (0.0.3, canonical URL).
+2. Verify the release tag points to the migrated code and canonical authenticated smoke passes.
+3. Delete only the `cargate-backend` Worker via Cloudflare API/dashboard (no forced deletion).
+4. Confirm only `cargate` remains; preserve Access, D1, R2 and secrets.
+
+Old APKs and iOS builds with the former hostname must update/rebuild; no support for the retired
+hostname after cutover. Authenticated API smoke does not verify native client authentication;
+Access remains enforced.
 
 ## Local development
 
@@ -81,26 +93,22 @@ production configuration keeps it false.
 
 ## Deploy
 
-Cutover prerequisite: rename the existing Worker in place; verify its ID and secret
-names are unchanged. Deploy the secret-free legacy adapter with
-`npx wrangler deploy --config legacy/wrangler.jsonc`. Keep client URLs on the
-legacy hostname until both endpoints pass smoke checks. The separate
-`trvny/trvny/mcp/status-mcp/wrangler.jsonc` must reference `cargate` via `AUTKA`.
-Preserve the existing Cloudflare Access application and policy for both hostnames.
+Use the existing `cargate` Worker. Preserve its D1, R2, secrets and Cloudflare Access policy.
+The separate `trvny/trvny/mcp/status-mcp/wrangler.jsonc` references `cargate` via `AUTKA`.
 
-After deployment, smoke-check both hostnames with authorized Access credentials:
+After deployment, smoke-check the canonical hostname with authorized Access credentials:
 `GET /health`, `GET /offers`, `GET /images/missing` (expected 404).
 The manual Worker smoke workflow requires `CF_ACCESS_CLIENT_ID` and
 `CF_ACCESS_CLIENT_SECRET` repository secrets. It tests live deployments, not PR code.
-Verify before shipping client URL changes.
+Verify before shipping clients.
 For the indexed-search pilot, additionally dispatch the smoke workflow with
 `indexed_search=true` after deploying the enabled Worker. It checks unauthenticated
-POST rejection on both hostnames with a deliberately invalid body (no provider call),
+POST rejection on the canonical hostname with a deliberately invalid body (no provider call),
 then makes one authorized PL preview request on the canonical hostname, without retries.
 At most one reservation per provider per run; do not schedule this smoke.
 Compatibility date 2026-11-11: newest supported by the locked CI runtime;
 retest before raising. Run `npm run test` and `npx wrangler deploy --dry-run`.
-Only deploy the main config after completing the cutover.
+Deploy the main config only.
 
 ```bash
 npx wrangler login
@@ -125,7 +133,7 @@ npx wrangler d1 execute cargate-offers --remote --command \
   "SELECT provider, monthly_limit FROM search_provider_limits ORDER BY provider;"
 ```
 
-Verify both limits, provider-side billing caps and Access coverage for both hostnames
+Verify both limits, provider-side billing caps and Access coverage for the canonical hostname
 before deploying with indexed search enabled. Missing/zero caps deny dispatch;
 never seed them automatically in migrations or reset an operator's disabled provider.
 Keep the flag disabled if the prerequisites are not met.

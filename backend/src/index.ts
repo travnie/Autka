@@ -8,7 +8,7 @@ import { runIngestion } from "./ingest/runner";
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.get("/", (c) => c.json({ service: "cargate-backend", status: "ok" }));
+app.get("/", (c) => c.json({ service: "cargate", status: "ok" }));
 app.get("/health", (c) => c.json({ status: "ok", time: new Date().toISOString() }));
 
 app.route("/", offersRouter);

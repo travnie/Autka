@@ -26,8 +26,8 @@ android {
         applicationId = "com.autka"
         minSdk = 26
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.0.2"
+        versionCode = 3
+        versionName = "0.0.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
 
@@ -51,7 +51,7 @@ android {
     buildTypes {
         release {
             // Verified live: GET / returns 200 and /offers, /import-services serve JSON.
-            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate-backend.travny.workers.dev/\"")
+            buildConfigField("String", "BACKEND_BASE_URL", "\"https://cargate.travny.workers.dev/\"")
             // Sample listings are useful in debug builds, but must never be mixed into
             // a production catalogue or presented as real marketplace data.
             buildConfigField("boolean", "ENABLE_MOCK_SOURCE", "false")
