@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.autka.core.model.Currency
 import com.autka.core.model.SavedSearch
 import com.autka.core.model.SearchFilter
+import com.autka.data.remote.backend.IndexedPreview
 import com.autka.data.repository.CarOfferRepository
 import com.autka.data.repository.ExchangeRateRepository
+import com.autka.data.repository.IndexedPreviewRepository
 import com.autka.data.repository.SourceInfo
 import com.autka.data.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +30,7 @@ class ListingsViewModel @Inject constructor(
     private val repository: CarOfferRepository,
     private val rateRepository: ExchangeRateRepository,
     private val settingsRepository: SettingsRepository,
+    private val indexedPreviewRepository: IndexedPreviewRepository,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(SearchFilter())
@@ -83,6 +86,9 @@ class ListingsViewModel @Inject constructor(
         refresh()
         viewModelScope.launch { rateRepository.refresh() }
     }
+
+    suspend fun indexedPreviews(query: String): List<IndexedPreview>? =
+        indexedPreviewRepository.searchPreviews(query)
 
     fun onQueryChange(query: String) {
         filter.value = filter.value.copy(query = query)
