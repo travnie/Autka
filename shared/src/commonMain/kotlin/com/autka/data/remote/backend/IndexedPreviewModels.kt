@@ -11,9 +11,10 @@ const val INDEXED_QUERY_MAX_UTF16_UNITS = 256
 
 /** Truncates to [maxUnits] UTF-16 code units without splitting a surrogate pair. */
 fun String.takeUtf16Units(maxUnits: Int): String {
+    if (maxUnits <= 0) return ""
     if (length <= maxUnits) return this
     val cut = take(maxUnits)
-    return if (cut.last().isHighSurrogate()) cut.dropLast(1) else cut
+    return if (cut.isNotEmpty() && cut.last().isHighSurrogate()) cut.dropLast(1) else cut
 }
 
 @Serializable

@@ -54,9 +54,7 @@ fun IndexedSearchDialog(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
 
-    // A new initialQuery starts a new dialog session: cancel any in-flight search
-    // (it would otherwise burn provider quota) and drop its stale state.
-    LaunchedEffect(initialQuery) {
+    fun resetSearchState() {
         generation++
         searchJob?.cancel()
         searchJob = null
@@ -65,8 +63,13 @@ fun IndexedSearchDialog(
         loading = false
     }
 
+    // A new initialQuery starts a new dialog session: cancel any in-flight search
+    // (it would otherwise burn provider quota) and drop its stale state.
+    LaunchedEffect(initialQuery) { resetSearchState() }
+
     fun performSearch() {
         if (loading || query.isBlank()) return
+        searchJob?.cancel()
         val gen = generation
         loading = true
         attempted = false
@@ -94,8 +97,7 @@ fun IndexedSearchDialog(
                     value = query,
                     onValueChange = {
                         query = it.takeUtf16Units(INDEXED_QUERY_MAX_UTF16_UNITS)
-                        results = null
-                        attempted = false
+                        resetSearchState()
                     },
                     enabled = !loading,
                     singleLine = true,

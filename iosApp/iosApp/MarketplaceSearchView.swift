@@ -85,10 +85,12 @@ struct MarketplaceSearchView: View {
                     TextField("Make", text: $make)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
+                        .disabled(indexedLoading)
 
                     TextField("Model", text: $model)
                         .textInputAutocapitalization(.words)
                         .autocorrectionDisabled()
+                        .disabled(indexedLoading)
 
                     Picker("Region", selection: $region) {
                         ForEach(SearchRegion.allCases) { choice in

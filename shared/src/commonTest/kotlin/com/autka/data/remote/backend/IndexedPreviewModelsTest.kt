@@ -11,6 +11,12 @@ class IndexedPreviewModelsTest {
     }
 
     @Test
+    fun `non-positive limit returns empty string instead of throwing`() {
+        assertEquals("", "Lexus ES".takeUtf16Units(0))
+        assertEquals("", "Lexus ES".takeUtf16Units(-5))
+    }
+
+    @Test
     fun `exactly at the limit is kept`() {
         val query = "a".repeat(INDEXED_QUERY_MAX_UTF16_UNITS)
         assertEquals(query, query.takeUtf16Units(INDEXED_QUERY_MAX_UTF16_UNITS))
