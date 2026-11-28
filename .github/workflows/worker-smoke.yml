@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   smoke:
-    name: Both deployed Worker hostnames
+    name: Deployed cargate Worker
     runs-on: ubuntu-slim
     timeout-minutes: 5
     steps:
@@ -27,16 +27,14 @@ jobs:
           : "${CF_ACCESS_CLIENT_ID:?Missing Access client ID}"
           : "${CF_ACCESS_CLIENT_SECRET:?Missing Access client secret}"
           headers=(-H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET")
-          for worker in cargate cargate-backend; do
-            base="https://$worker.travny.workers.dev"
-            echo "Checking $worker"
-            curl --fail --silent --show-error --retry 3 --max-time 15 "${headers[@]}" "$base/health" |
-              jq -e '.status == "ok"' >/dev/null
-            curl --fail --silent --show-error --retry 3 --max-time 15 "${headers[@]}" "$base/offers?limit=1" |
-              jq -e '(.offers | type == "array") and (.count | type == "number")' >/dev/null
-            status=$(curl --silent --show-error --max-time 15 "${headers[@]}" --output /dev/null --write-out '%{http_code}' "$base/images/smoke-missing-object")
-            test "$status" = 404
-          done
+          base="https://cargate.travny.workers.dev"
+          echo "Checking cargate"
+          curl --fail --silent --show-error --retry 3 --max-time 15 "${headers[@]}" "$base/health" |
+            jq -e '.status == "ok"' >/dev/null
+          curl --fail --silent --show-error --retry 3 --max-time 15 "${headers[@]}" "$base/offers?limit=1" |
+            jq -e '(.offers | type == "array") and (.count | type == "number")' >/dev/null
+          status=$(curl --silent --show-error --max-time 15 "${headers[@]}" --output /dev/null --write-out '%{http_code}' "$base/images/smoke-missing-object")
+          test "$status" = 404
       - name: Verify enabled PL pilot and Access
         if: inputs.indexed_search
         shell: bash
@@ -47,15 +45,13 @@ jobs:
           set -euo pipefail
           : "${CF_ACCESS_CLIENT_ID:?Missing Access client ID}"
           : "${CF_ACCESS_CLIENT_SECRET:?Missing Access client secret}"
-          for worker in cargate cargate-backend; do
-            # Invalid payload never reaches provider dispatch, even if Access is misconfigured.
-            status=$(curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' \
-              -H 'Content-Type: application/json' --data '{}' "https://$worker.travny.workers.dev/search/previews")
-            case "$status" in
-              302|303|307|308|401|403) ;;
-              *) echo "Unexpected unauthenticated status for $worker: $status"; exit 1 ;;
-            esac
-          done
+          # Invalid payload never reaches provider dispatch, even if Access is misconfigured.
+          status=$(curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' \
+            -H 'Content-Type: application/json' --data '{}' "https://cargate.travny.workers.dev/search/previews")
+          case "$status" in
+            302|303|307|308|401|403) ;;
+            *) echo "Unexpected unauthenticated status for cargate: $status"; exit 1 ;;
+          esac
           # One bounded query, no retry and no result output.
           curl --fail --silent --show-error --max-time 20 \
             -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
