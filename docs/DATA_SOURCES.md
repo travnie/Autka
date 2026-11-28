@@ -138,7 +138,9 @@ direct dealer/importer feeds remain parallel opportunities.
 - Server secrets: `BSAS_API_KEY` (Brave), `TAVILY_API_KEY`. Missing enable flag fails closed.
   PL pilot: `ENABLE_INDEXED_SEARCH=true` in production after owner confirmed prepaid-only
   Brave and Tavily Researcher without pay-as-you-go (2026-11-17). Canonical
-  `cargate.travny.workers.dev` protected by Access; preview URLs disabled.
+  `cargate.travny.workers.dev` protected by Access; preview URLs disabled. Both production
+  hostnames were covered by the same Access application (verified 2026-11-19 and 2026-11-28);
+  keep that protection until the legacy Worker is deleted.
   Owner-directed single-Worker cutover: see [client migration](../backend/README.md#client-migration).
   Initial D1 limits: 100 reservations/provider/UTC month, leaving headroom for other account usage.
   Missing/zero cap denies dispatch, not unlimited usage. Fresh/recreated D1 requires explicit

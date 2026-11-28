@@ -62,10 +62,18 @@ D1 and R2 bindings live in `wrangler.jsonc`.
 
 ## Client migration
 
-Single Worker by owner request. Publish and verify the rolling Android release with
-`cargate` before removing the live compatibility adapter. Old APKs and iOS builds with
-the former hostname must update/rebuild; no support for the retired hostname after cutover.
-Authenticated API smoke does not verify native client authentication; Access remains enforced.
+Single Worker by owner request. Removing adapter source does not delete the deployed Worker.
+
+Cutover checklist (record results in PR #300):
+
+1. Merge after CI; publish the signed rolling Android release (0.0.3, canonical URL).
+2. Verify the release tag points to the migrated code and canonical authenticated smoke passes.
+3. Delete only the `cargate-backend` Worker via Cloudflare API/dashboard (no forced deletion).
+4. Confirm only `cargate` remains; preserve Access, D1, R2 and secrets.
+
+Old APKs and iOS builds with the former hostname must update/rebuild; no support for the retired
+hostname after cutover. Authenticated API smoke does not verify native client authentication;
+Access remains enforced.
 
 ## Local development
 
