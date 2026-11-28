@@ -60,6 +60,13 @@ The `CarOffer` shape in `src/lib/types.ts` mirrors Android
 
 D1 and R2 bindings live in `wrangler.jsonc`.
 
+## Client migration
+
+Single Worker by owner request. Publish and verify the rolling Android release with
+`cargate` before removing the live compatibility adapter. Old APKs and iOS builds with
+the former hostname must update/rebuild; no support for the retired hostname after cutover.
+Authenticated API smoke does not verify native client authentication; Access remains enforced.
+
 ## Local development
 
 ```bash
