@@ -1,0 +1,1 @@
+Zmiana adresu backendu. Zaktualizuj aplikację przed wyłączeniem starego adresu.
